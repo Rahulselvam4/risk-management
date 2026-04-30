@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import numpy as np
 import os
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine, exc, text
 from dotenv import load_dotenv
 
 # Initialize logging
@@ -52,10 +52,30 @@ class PortfolioCalculator:
                 continue
 
             try:
-                # Fetch this specific asset's history safely
-                query = "SELECT date, close_price FROM historical_prices WHERE ticker = %(ticker)s ORDER BY date ASC"
-                df = pd.read_sql(query, self._engine, params={"ticker": ticker})
-                
+                # Try several sensible ticker formats to be resilient to exchange suffixes
+                def fetch_for(tk: str) -> pd.DataFrame:
+                    q = text("SELECT date, close_price FROM historical_prices WHERE ticker = :ticker ORDER BY date ASC")
+                    with self._engine.connect() as conn:
+                        res = conn.execute(q, {"ticker": tk})
+                        rows = res.fetchall()
+                        if not rows:
+                            return pd.DataFrame()
+                        cols = res.keys()
+                        return pd.DataFrame(rows, columns=cols)
+
+                # Primary attempt: exact ticker as provided
+                df = fetch_for(ticker)
+
+                # Fallback: strip common exchange suffix (e.g. ".NS") if present
+                if df.empty and "." in ticker:
+                    base = ticker.split(".")[0]
+                    df = fetch_for(base)
+
+                # Fallback: try uppercased base ticker
+                if df.empty and "." in ticker:
+                    base = ticker.split(".")[0].upper()
+                    df = fetch_for(base)
+
                 if df.empty:
                     logger.warning(f"No historical data found for {ticker}. Skipping in portfolio calculation.")
                     continue
@@ -128,4 +148,4 @@ class PortfolioCalculator:
             }
         except Exception as e:
             logger.error(f"Error extracting portfolio metrics: {e}")
-            return {"error": "Math engine failed to process portfolio metrics."}ty
+            return {"error": "Math engine failed to process portfolio metrics."}

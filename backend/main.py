@@ -19,6 +19,25 @@ logger.setLevel(logging.INFO)
 
 app = FastAPI(title="Enterprise Risk Platform API", version="2.0.0")
 
+
+def ensure_risk_column(conn):
+    """Ensure the portfolios table has a risk_threshold column (adds it if missing)."""
+    try:
+        cur = conn.cursor()
+        # Check information_schema for existing column (works across MySQL versions)
+        cur.execute("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'portfolios' AND COLUMN_NAME = 'risk_threshold'")
+        exists = cur.fetchone()[0]
+        if not exists:
+            try:
+                cur.execute("ALTER TABLE portfolios ADD COLUMN risk_threshold DECIMAL(5,2) DEFAULT 1.5")
+                conn.commit()
+                logger.info("Added missing column 'risk_threshold' to portfolios table.")
+            except Exception as e:
+                logger.error(f"Failed to add risk_threshold column: {e}")
+        cur.close()
+    except Exception as e:
+        logger.error(f"ensure_risk_column failed: {e}")
+
 # Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +51,7 @@ app.add_middleware(
 class PortfolioItem(BaseModel):
     ticker: str
     weight: float
+    risk_threshold: float = 1.5  
 
 class RebalanceRequest(BaseModel):
     assets: List[PortfolioItem]
@@ -116,18 +136,31 @@ def login_google(item: GoogleLoginItem):
     finally:
         cursor.close()
         conn.close()
-
 # --- 2. PORTFOLIO CRUD OPERATIONS ---
 
 @app.get("/portfolio/{user_id}", tags=["Portfolio Management"])
 def get_user_portfolio(user_id: int):
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
+    # Ensure schema supports thresholds
+    ensure_risk_column(conn)
     cursor = conn.cursor(dictionary=True)
     
     try:
-        cursor.execute("SELECT ticker, weight FROM portfolios WHERE user_id = %s", (user_id,))
+        # NEW: Added risk_threshold to the SELECT statement
+        cursor.execute("SELECT ticker, weight, risk_threshold FROM portfolios WHERE user_id = %s", (user_id,))
         portfolio = cursor.fetchall()
+        # If any returned row has NULL risk_threshold, try to populate from fallback table
+        try:
+            for row in portfolio:
+                if 'risk_threshold' not in row or row['risk_threshold'] is None:
+                    cursor.execute("SELECT risk_threshold FROM portfolios WHERE user_id = %s AND ticker = %s", (user_id, row['ticker']))
+                    thr = cursor.fetchone()
+                    if thr and 'risk_threshold' in thr:
+                        row['risk_threshold'] = thr['risk_threshold']
+        except Exception:
+            # If fallback table doesn't exist or query fails, continue; UI will default
+            pass
         return {"user_id": user_id, "assets": portfolio}
     finally:
         cursor.close()
@@ -135,19 +168,21 @@ def get_user_portfolio(user_id: int):
 
 @app.post("/portfolio/{user_id}", tags=["Portfolio Management"])
 def add_or_update_asset(user_id: int, item: PortfolioItem, background_tasks: BackgroundTasks):
-    """Adds a new ticker, updates weight, and TRIGGERS KAFKA PIPELINE."""
+    """Adds a new ticker, updates weight & threshold, and TRIGGERS KAFKA PIPELINE."""
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
     cursor = conn.cursor()
+    ensure_risk_column(conn)
     
+    # NEW: Updated SQL to handle risk_threshold on insert and duplicate key updates
     sql = """
-        INSERT INTO portfolios (user_id, ticker, weight) 
-        VALUES (%s, %s, %s) 
-        ON DUPLICATE KEY UPDATE weight = %s
+        INSERT INTO portfolios (user_id, ticker, weight, risk_threshold) 
+        VALUES (%s, %s, %s, %s) 
+        ON DUPLICATE KEY UPDATE weight = %s, risk_threshold = %s
     """
     try:
         ticker_upper = item.ticker.upper()
-        cursor.execute(sql, (user_id, ticker_upper, item.weight, item.weight))
+        cursor.execute(sql, (user_id, ticker_upper, item.weight, item.risk_threshold, item.weight, item.risk_threshold))
         conn.commit()
         
         # Fire the Kafka background task immediately to ingest data
@@ -163,10 +198,11 @@ def add_or_update_asset(user_id: int, item: PortfolioItem, background_tasks: Bac
 
 @app.put("/portfolio/{user_id}/rebalance", tags=["Portfolio Management"])
 def rebalance_portfolio(user_id: int, request: RebalanceRequest, background_tasks: BackgroundTasks):
-    """BULK UPDATE: Updates weights for all provided assets simultaneously."""
+    """BULK UPDATE: Updates weights and thresholds for all provided assets simultaneously."""
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
     cursor = conn.cursor()
+    ensure_risk_column(conn)
     
     # Validation: Ensure weights sum up correctly (allow slight float variance)
     total_weight = sum(item.weight for item in request.assets)
@@ -179,11 +215,9 @@ def rebalance_portfolio(user_id: int, request: RebalanceRequest, background_task
             if not raw:
                 return raw
             s = raw.strip().upper()
-            # If user provided a label like "Name (TICKER.NS)", extract the parentheses content
             m = re.search(r"\(([^)]+)\)", s)
             if m:
                 s = m.group(1)
-            # If still contains spaces, take the last token (commonly the ticker)
             if " " in s:
                 s = s.split()[-1]
             return s
@@ -193,23 +227,50 @@ def rebalance_portfolio(user_id: int, request: RebalanceRequest, background_task
             if len(item.ticker) > 64:
                 raise HTTPException(status_code=400, detail=f"Ticker too long: '{item.ticker}'. Use exchange ticker like 'RELIANCE.NS'. Max 64 chars.")
 
-        # Proceed with DB replacement
-
         # Log normalized tickers for debugging
-        logger.info(f"Rebalance request for user {user_id} with assets: {[{'ticker': a.ticker, 'weight': a.weight} for a in request.assets]}")
+        logger.info(f"Rebalance request for user {user_id} with assets: {[{'ticker': a.ticker, 'weight': a.weight, 'threshold': a.risk_threshold} for a in request.assets]}")
 
         # Replace the user's portfolio atomically: remove existing entries and insert the new set.
         cursor.execute("DELETE FROM portfolios WHERE user_id = %s", (user_id,))
 
-        insert_sql = "INSERT INTO portfolios (user_id, ticker, weight) VALUES (%s, %s, %s)"
+        # NEW: Updated Insert string to map the risk_threshold into the database
+        insert_sql = "INSERT INTO portfolios (user_id, ticker, weight, risk_threshold) VALUES (%s, %s, %s, %s)"
         for item in request.assets:
             ticker_upper = item.ticker.upper()
             logger.debug(f"Inserting ticker={repr(ticker_upper)} len={len(ticker_upper)} for user {user_id}")
             try:
-                cursor.execute(insert_sql, (user_id, ticker_upper, item.weight))
+                # NEW: Pass the risk_threshold dynamically
+                logger.debug(f"Executing DB insert for {ticker_upper} weight={item.weight} threshold={item.risk_threshold}")
+                cursor.execute(insert_sql, (user_id, ticker_upper, item.weight, item.risk_threshold))
             except Exception as db_e:
+                # If insertion failed due to missing column or permission, fallback to safe upsert
                 logger.error(f"DB insert failed for ticker {repr(ticker_upper)} (len={len(ticker_upper)}): {db_e}")
-                raise
+                try:
+                    logger.info("Falling back: attempting to upsert without risk_threshold and store threshold in portfolio_thresholds table.")
+                    # Ensure fallback table exists
+                    cursor.execute(
+                        """
+                        CREATE TABLE IF NOT EXISTS portfolios (
+                            user_id INT NOT NULL,
+                            ticker VARCHAR(64) NOT NULL,
+                            risk_threshold DECIMAL(5,2) DEFAULT 1.5,
+                            PRIMARY KEY (user_id, ticker)
+                        ) ENGINE=InnoDB
+                        """
+                    )
+                    # Upsert into portfolios without threshold
+                    cursor.execute(
+                        "INSERT INTO portfolios (user_id, ticker, weight) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE weight = %s",
+                        (user_id, ticker_upper, item.weight, item.weight)
+                    )
+                    # Upsert threshold into fallback table
+                    cursor.execute(
+                        "INSERT INTO portfolios (user_id, ticker, risk_threshold) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE risk_threshold = %s",
+                        (user_id, ticker_upper, item.risk_threshold, item.risk_threshold)
+                    )
+                except Exception as fallback_e:
+                    logger.error(f"Fallback upsert also failed for {ticker_upper}: {fallback_e}")
+                    raise
             # Trigger ingestion for each inserted ticker
             background_tasks.add_task(trigger_kafka_pipeline, ticker_upper)
 
@@ -237,6 +298,7 @@ def remove_asset(user_id: int, ticker: str):
         cursor.close()
         conn.close()
 
+
 # --- 3. MACRO PORTFOLIO DIAGNOSTICS ---
 
 @app.get("/portfolio/{user_id}/diagnostics", tags=["Macro Analytics"])
@@ -261,10 +323,38 @@ def get_portfolio_diagnostics(user_id: int):
 
 # --- 4. MICRO RISK & ML PREDICTION ---
 
-@app.get("/predict/{ticker}", tags=["Micro Analytics"])
-def get_risk_forecast(ticker: str):
+@app.get("/predict/{user_id}/{ticker}", tags=["Micro Analytics"])
+def get_risk_forecast(user_id: int, ticker: str):
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
+    
     try:
-        predictor = RiskPredictor(ticker.upper())
+        # 1. Fetch the user's custom threshold for this specific stock
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT risk_threshold FROM portfolios WHERE user_id = %s AND ticker = %s", (user_id, ticker.upper()))
+        result = cursor.fetchone()
+
+        # Default to None to allow fallback lookup
+        user_threshold = None
+        if result and 'risk_threshold' in result and result['risk_threshold'] is not None:
+            user_threshold = result['risk_threshold']
+        else:
+            # Fallback: check the portfolio_thresholds table if present
+            try:
+                cursor.execute("SELECT risk_threshold FROM portfolios WHERE user_id = %s AND ticker = %s", (user_id, ticker.upper()))
+                thr = cursor.fetchone()
+                if thr and 'risk_threshold' in thr and thr['risk_threshold'] is not None:
+                    user_threshold = thr['risk_threshold']
+            except Exception:
+                # Table may not exist; ignore and fall back to default
+                user_threshold = None
+
+        # Default to 1.5% if they haven't set a custom one
+        if user_threshold is None:
+            user_threshold = 1.5
+
+        # 2. Pass the custom threshold to the ML Model
+        predictor = RiskPredictor(ticker.upper(), threshold_pct=user_threshold)
         forecast = predictor.train_and_predict()
         
         if "error" in forecast:
@@ -274,7 +364,10 @@ def get_risk_forecast(ticker: str):
     except Exception as e:
         logger.error(f"ML Model prediction failure for {ticker}: {e}")
         raise HTTPException(status_code=500, detail="Internal error during AI inference.")
-
+    finally:
+        cursor.close()
+        conn.close()
+        
 # --- 5. SYSTEM DATA ---
 
 @app.get("/available-tickers", tags=["System"])

@@ -83,3 +83,45 @@ body {
     stroke: var(--deep-teal) !important;
     fill: var(--muted-aqua) !important;
 }
+
+/* --- FIX: prevent card/Plotly content from being clipped on small screens --- */
+.card {
+    overflow: visible !important;
+}
+
+.card .card-header,
+.card .card-body {
+    overflow: visible !important;
+}
+
+/* Plotly creates SVGs with titles using .gtitle; ensure titles can wrap and scale */
+.gtitle {
+    white-space: normal !important;
+    font-size: 18px !important;
+}
+
+/* Ensure Plotly SVG doesn't hide content due to overflow rules */
+.js-plotly-plot svg {
+    overflow: visible !important;
+}
+
+@media (max-width: 768px) {
+    .gtitle { font-size: 14px !important; }
+    .card { padding-bottom: 1rem !important; }
+}
+
+/* Selector card smaller and centered */
+.selector-card {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0.75rem !important;
+}
+
+/* Slightly reduce padding for chart cards to make them more compact */
+.chart-card {
+    padding: 0.5rem !important;
+}
+
+@media (min-width: 1200px) {
+    .selector-card { max-width: 720px; }
+}

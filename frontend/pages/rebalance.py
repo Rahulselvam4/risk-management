@@ -12,7 +12,6 @@ dash.register_page(__name__, path='/rebalance', title="Rebalance - Squilla Fund"
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
-# --- INDIAN MARKET ASSETS (For the Add New Stock Dropdown) ---
 INDIAN_ASSETS = [
     {"label": "Reliance Industries (RELIANCE.NS)", "value": "RELIANCE.NS"},
     {"label": "Tata Consultancy Services (TCS.NS)", "value": "TCS.NS"},
@@ -31,26 +30,21 @@ INDIAN_ASSETS = [
     {"label": "Maruti Suzuki (MARUTI.NS)", "value": "MARUTI.NS"},
     {"label": "Sun Pharmaceuticals (SUNPHARMA.NS)", "value": "SUNPHARMA.NS"},
     {"label": "Kotak Mahindra Bank (KOTAKBANK.NS)", "value": "KOTAKBANK.NS"},
-    {"label": "Titan Company (TITAN.NS)", "value": "TITAN.NS"},
-    {"label": "Gold Benchmark - Nippon India ETF (GOLDBEES.NS)", "value": "GOLDBEES.NS"},
-    {"label": "Silver Benchmark - Nippon India ETF (SILVERBEES.NS)", "value": "SILVERBEES.NS"},
-    {"label": "Debt / Cash Equivalent - Liquid BeES (LIQUIDBEES.NS)", "value": "LIQUIDBEES.NS"},
-    {"label": "Govt Bonds - Long Term Gilt ETF (GILTBEES.NS)", "value": "GILTBEES.NS"}
+    {"label": "Titan Company (TITAN.NS)", "value": "TITAN.NS"}
 ]
 
 # --- UI LAYOUT ---
 layout = html.Div([
     get_navbar(),
-    dcc.Location(id="rebalance-loc"), # Invisible trigger for initial page load
+    dcc.Location(id="rebalance-loc"), 
     dbc.Container([
         dbc.Row([
             dbc.Col([
                 html.H2("Rebalancing Engine", style={"color": COLORS["dark_gray"], "fontWeight": "600"}),
-                html.P("Rotate assets and adjust allocation. Total weights must sum exactly to 1.0 (100%).", className="text-muted"),
+                html.P("Rotate assets and adjust allocation and AI risk threshold. Total weights must sum exactly to 1.0 (100%).", className="text-muted"),
                 
                 dbc.Card([
                     dbc.CardBody([
-                        # --- ADD NEW ASSET CONTROLS ---
                         dbc.Row([
                             dbc.Col(
                                 dcc.Dropdown(
@@ -67,12 +61,10 @@ layout = html.Div([
                         
                         html.Hr(style={"color": COLORS["light_gray"]}),
                         
-                        # --- DYNAMIC PORTFOLIO LIST ---
                         dcc.Loading(html.Div(id="rebalance-asset-container"), type="circle", color=COLORS["deep_teal"]),
                         
                         html.Hr(className="my-4", style={"color": COLORS["light_gray"]}),
                         
-                        # --- VALIDATION BAR ---
                         dbc.Row([
                             dbc.Col(html.H5("Total Allocation:", className="mb-0"), width=4, align="center"),
                             dbc.Col(html.H4(id="rebalance-total-text", className="mb-0 text-end"), width=8)
@@ -80,50 +72,51 @@ layout = html.Div([
                         
                         dbc.Progress(id="rebalance-progress-bar", value=0, className="mt-3 mb-4", style={"height": "10px"}),
                         
-                        # --- ACTION BUTTONS ---
                         dbc.Row([
                             dbc.Col(dbc.Button("Cancel", href="/dashboard", color="light", className="w-100 btn text-dark")),
-                            dbc.Col(dbc.Button("Apply New Weights", id="btn-submit-rebalance", color="primary", className="w-100 btn", disabled=True))
+                            dbc.Col(dbc.Button("Apply New Setup", id="btn-submit-rebalance", color="primary", className="w-100 btn", disabled=True))
                         ]),
                         
                         html.Div(id="rebalance-alert", className="mt-3"),
                         dcc.Location(id="rebalance-redirect", refresh=True)
                     ])
-                ], className="shadow-sm border-0 mt-4", style={"maxWidth": "700px", "margin": "0 auto"})
+                ], className="shadow-sm border-0 mt-4", style={"maxWidth": "800px", "margin": "0 auto"})
             ])
         ])
     ], fluid=True)
 ], style={"backgroundColor": COLORS["off_white"], "minHeight": "100vh"})
 
 
-# --- LOGIC 1: MASTER UI GENERATOR (Handles Load, Add, and Delete) ---
+# --- LOGIC 1: MASTER UI GENERATOR ---
 @callback(
     Output("rebalance-asset-container", "children"),
     Input("rebalance-loc", "pathname"),
     Input("btn-add-asset", "n_clicks"),
     Input({'type': 'btn-delete-asset', 'index': ALL}, 'n_clicks'),
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'value'),
+    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'value'), # Capture current thresholds
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'id'),
     State("new-asset-dropdown", "value"),
     State("session-store", "data"),
     prevent_initial_call=False
 )
-def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, weight_ids, new_ticker, session):
+def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, thresholds, weight_ids, new_ticker, session):
     if not session or not session.get('user_id'):
         return [dbc.Alert("Unauthorized. Please log in.", color="danger")]
 
     user_id = session['user_id']
     triggered_id = ctx.triggered_id
 
-    # 1. Read the current screen state into a list
     current_portfolio = []
-    if weights and weight_ids:
-        for w, w_id in zip(weights, weight_ids):
-            current_portfolio.append({"ticker": w_id['index'], "weight": w if w is not None else 0.0})
+    if weights and weight_ids and thresholds:
+        for w, t, w_id in zip(weights, thresholds, weight_ids):
+            current_portfolio.append({
+                "ticker": w_id['index'], 
+                "weight": w if w is not None else 0.0,
+                "risk_threshold": t if t is not None else 1.5
+            })
 
-    # 2. Handle the specific action that triggered the callback
     if not triggered_id or triggered_id == "rebalance-loc":
-        # Initial Page Load: Fetch from Database
         try:
             res = requests.get(f"{API_URL}/portfolio/{user_id}")
             current_portfolio = res.json().get("assets", [])
@@ -131,30 +124,31 @@ def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, weight_ids
             return [dbc.Alert(f"Database Error: {e}", color="danger")]
 
     elif triggered_id == "btn-add-asset":
-        # User clicked "Add Stock"
         if new_ticker and not any(p['ticker'] == new_ticker for p in current_portfolio):
-            current_portfolio.append({"ticker": new_ticker, "weight": 0.0})
+            current_portfolio.append({"ticker": new_ticker, "weight": 0.0, "risk_threshold": 1.5})
 
     elif isinstance(triggered_id, dict) and triggered_id.get('type') == 'btn-delete-asset':
-        # User clicked a Trash Can. The new ctx.triggered_id directly hands us the dictionary!
         deleted_ticker = triggered_id['index']
         current_portfolio = [p for p in current_portfolio if p['ticker'] != deleted_ticker]
 
-    # 3. Generate the actual UI components
     if not current_portfolio:
         return [dbc.Alert("Your portfolio is empty. Add a stock using the search bar above.", color="info")]
 
     input_rows = []
     for a in current_portfolio:
         row = dbc.InputGroup([
-            dbc.InputGroupText(a['ticker'], style={"width": "160px", "fontWeight": "bold", "backgroundColor": COLORS["deep_teal"], "color": "white"}),
+            dbc.InputGroupText(a['ticker'], style={"width": "150px", "fontWeight": "bold", "backgroundColor": COLORS["deep_teal"], "color": "white"}),
+            dbc.InputGroupText("Wt:"),
             dbc.Input(
                 id={'type': 'dynamic-weight-input', 'index': a['ticker']}, 
-                type="number", 
-                value=float(a['weight']), 
-                step=0.01, min=0, max=1
+                type="number", value=float(a.get('weight', 0)), step=0.01, min=0, max=1
             ),
-            # The Trash Can delete button
+            # NEW: Dynamic Threshold Input Field
+            dbc.InputGroupText("Risk %:"),
+            dbc.Input(
+                id={'type': 'dynamic-threshold-input', 'index': a['ticker']}, 
+                type="number", value=float(a.get('risk_threshold', 1.5)), step=0.1, min=0.001
+            ),
             dbc.Button(html.I(className="bi bi-trash"), id={'type': 'btn-delete-asset', 'index': a['ticker']}, color="danger", outline=True)
         ], className="mb-3 shadow-sm")
         input_rows.append(row)
@@ -194,13 +188,25 @@ def validate_weights(weights):
     Output("rebalance-redirect", "pathname"),
     Input("btn-submit-rebalance", "n_clicks"),
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'value'),
+    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'value'), # Capture final thresholds
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'id'),
     State("session-store", "data"),
     prevent_initial_call=True
 )
-def submit_rebalance(n_clicks, weights, weight_ids, session):
+def submit_rebalance(n_clicks, weights, thresholds, weight_ids, session):
     user_id = session.get('user_id')
-    new_portfolio = [{"ticker": w_id['index'], "weight": w} for w, w_id in zip(weights, weight_ids)]
+    # Build the payload matching the backend schema (ticker, weight, risk_threshold)
+    new_portfolio = []
+    for w, t, w_id in zip(weights, thresholds, weight_ids):
+        try:
+            weight_val = float(w) if w is not None else 0.0
+        except Exception:
+            weight_val = 0.0
+        try:
+            thresh_val = float(t) if t is not None else 1.5
+        except Exception:
+            thresh_val = 1.5
+        new_portfolio.append({"ticker": w_id['index'], "weight": weight_val, "risk_threshold": thresh_val})
     
     try:
         res = requests.put(f"{API_URL}/portfolio/{user_id}/rebalance", json={"assets": new_portfolio})
