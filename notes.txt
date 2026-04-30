@@ -1,0 +1,16 @@
+Because this is a financial risk model, standard Accuracy is a dangerous metric. 
+I focused on the Confusion Matrix, specifically prioritizing Recall over Precision. 
+Missing a market crash (a False Negative) destroys a user's portfolio, 
+whereas falsely predicting a crash (a False Positive) just means the user plays it safe for a day. 
+Therefore, I optimized the model's threshold to maximize Recall, 
+ensuring we catch as many true high-risk days as possible, 
+while using the SHAP waterfall charts to let the human user verify the 'False Positives'.
+
+
+True Positive (TP): Model predicted Risk, and the market crashed. (Success)
+
+True Negative (TN): Model predicted Safe, and the market was fine. (Success)
+
+False Positive (FP): Model predicted Risk, but the market was fine. (False Alarm)
+
+False Negative (FN): Model predicted Safe, but the market crashed! (Disaster)
