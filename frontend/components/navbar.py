@@ -10,7 +10,7 @@ def get_navbar():
             # Left Side: Brand Logo / Name
             dbc.Row([
                 dbc.Col(html.I(className="bi bi-shield-lock-fill", style={"fontSize": "1.5rem", "color": COLORS["off_white"]})),
-                dbc.Col(dbc.NavbarBrand("Squilla Risk Engine", className="ms-2 fs-4", style={"color": COLORS["off_white"]})),
+                dbc.Col(dbc.NavbarBrand("Risk Engine", className="ms-2 fs-4", style={"color": COLORS["off_white"]})),
             ], align="center", className="g-0"),
 
             # Right Side: Navigation Links & Profile

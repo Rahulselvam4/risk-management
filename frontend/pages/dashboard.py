@@ -14,37 +14,100 @@ from components.navbar import get_navbar
 from components.kpi_card import create_kpi_card
 from theme import COLORS, get_base_layout
 
-dash.register_page(__name__, path='/dashboard', title="Dashboard - Squilla Fund")
-
+dash.register_page(__name__, path='/dashboard', title="RISK DASHBOARD", description="Your portfolio's health at a glance, with AI-driven insights and diagnostics.")
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 # --- INDIAN MARKET ASSETS ---
 INDIAN_ASSETS = [
-    # Nifty 50 & Nifty 100 Heavyweights
-    {"label": "Reliance Industries (RELIANCE.NS)",       "value": "RELIANCE.NS"},
-    {"label": "Tata Consultancy Services (TCS.NS)",      "value": "TCS.NS"},
-    {"label": "HDFC Bank (HDFCBANK.NS)",                 "value": "HDFCBANK.NS"},
-    {"label": "Infosys (INFY.NS)",                       "value": "INFY.NS"},
-    {"label": "ICICI Bank (ICICIBANK.NS)",               "value": "ICICIBANK.NS"},
-    {"label": "State Bank of India (SBIN.NS)",           "value": "SBIN.NS"},
-    {"label": "Bharti Airtel (BHARTIARTL.NS)",           "value": "BHARTIARTL.NS"},
-    {"label": "ITC Limited (ITC.NS)",                    "value": "ITC.NS"},
-    {"label": "Hindustan Unilever (HINDUNILVR.NS)",      "value": "HINDUNILVR.NS"},
-    {"label": "Larsen & Toubro (LT.NS)",                 "value": "LT.NS"},
-    {"label": "Bajaj Finance (BAJFINANCE.NS)",           "value": "BAJFINANCE.NS"},
-    {"label": "Tata Motors (TATAMOTORS.NS)",             "value": "TATAMOTORS.NS"},
-    {"label": "Mahindra & Mahindra (M&M.NS)",            "value": "M&M.NS"},
-    {"label": "Asian Paints (ASIANPAINT.NS)",            "value": "ASIANPAINT.NS"},
-    {"label": "Maruti Suzuki (MARUTI.NS)",               "value": "MARUTI.NS"},
-    {"label": "Sun Pharmaceuticals (SUNPHARMA.NS)",      "value": "SUNPHARMA.NS"},
-    {"label": "Kotak Mahindra Bank (KOTAKBANK.NS)",      "value": "KOTAKBANK.NS"},
-    {"label": "Titan Company (TITAN.NS)",                "value": "TITAN.NS"},
-    # Commodities
-    {"label": "Gold Benchmark - Nippon India ETF (GOLDBEES.NS)",   "value": "GOLDBEES.NS"},
-    {"label": "Silver Benchmark - Nippon India ETF (SILVERBEES.NS)","value": "SILVERBEES.NS"},
+    # Nifty 50 Blue Chips - Banking & Financial Services
+    {"label": "HDFC Bank (HDFCBANK.NS)", "value": "HDFCBANK.NS"},
+    {"label": "ICICI Bank (ICICIBANK.NS)", "value": "ICICIBANK.NS"},
+    {"label": "State Bank of India (SBIN.NS)", "value": "SBIN.NS"},
+    {"label": "Kotak Mahindra Bank (KOTAKBANK.NS)", "value": "KOTAKBANK.NS"},
+    {"label": "Axis Bank (AXISBANK.NS)", "value": "AXISBANK.NS"},
+    {"label": "Bajaj Finance (BAJFINANCE.NS)", "value": "BAJFINANCE.NS"},
+    {"label": "Bajaj Finserv (BAJAJFINSV.NS)", "value": "BAJAJFINSV.NS"},
+    {"label": "HDFC Life Insurance (HDFCLIFE.NS)", "value": "HDFCLIFE.NS"},
+    {"label": "SBI Life Insurance (SBILIFE.NS)", "value": "SBILIFE.NS"},
+    
+    # IT & Technology
+    {"label": "Tata Consultancy Services (TCS.NS)", "value": "TCS.NS"},
+    {"label": "Infosys (INFY.NS)", "value": "INFY.NS"},
+    {"label": "HCL Technologies (HCLTECH.NS)", "value": "HCLTECH.NS"},
+    {"label": "Wipro (WIPRO.NS)", "value": "WIPRO.NS"},
+    {"label": "Tech Mahindra (TECHM.NS)", "value": "TECHM.NS"},
+    
+    # Energy & Oil
+    {"label": "Reliance Industries (RELIANCE.NS)", "value": "RELIANCE.NS"},
+    {"label": "ONGC (ONGC.NS)", "value": "ONGC.NS"},
+    {"label": "NTPC (NTPC.NS)", "value": "NTPC.NS"},
+    {"label": "Power Grid Corporation (POWERGRID.NS)", "value": "POWERGRID.NS"},
+    {"label": "Coal India (COALINDIA.NS)", "value": "COALINDIA.NS"},
+    
+    # Automobiles
+    {"label": "Tata Motors (TATAMOTORS.NS)", "value": "TATAMOTORS.NS"},
+    {"label": "Maruti Suzuki (MARUTI.NS)", "value": "MARUTI.NS"},
+    {"label": "Mahindra & Mahindra (M%26M.NS)", "value": "M%26M.NS"},
+    {"label": "Bajaj Auto (BAJAJ-AUTO.NS)", "value": "BAJAJ-AUTO.NS"},
+    {"label": "Hero MotoCorp (HEROMOTOCO.NS)", "value": "HEROMOTOCO.NS"},
+    {"label": "Eicher Motors (EICHERMOT.NS)", "value": "EICHERMOT.NS"},
+    
+    # FMCG & Consumer
+    {"label": "Hindustan Unilever (HINDUNILVR.NS)", "value": "HINDUNILVR.NS"},
+    {"label": "ITC Limited (ITC.NS)", "value": "ITC.NS"},
+    {"label": "Nestle India (NESTLEIND.NS)", "value": "NESTLEIND.NS"},
+    {"label": "Britannia Industries (BRITANNIA.NS)", "value": "BRITANNIA.NS"},
+    {"label": "Dabur India (DABUR.NS)", "value": "DABUR.NS"},
+    {"label": "Godrej Consumer (GODREJCP.NS)", "value": "GODREJCP.NS"},
+    
+    # Pharmaceuticals
+    {"label": "Sun Pharmaceuticals (SUNPHARMA.NS)", "value": "SUNPHARMA.NS"},
+    {"label": "Dr. Reddy's Laboratories (DRREDDY.NS)", "value": "DRREDDY.NS"},
+    {"label": "Cipla (CIPLA.NS)", "value": "CIPLA.NS"},
+    {"label": "Divi's Laboratories (DIVISLAB.NS)", "value": "DIVISLAB.NS"},
+    {"label": "Biocon (BIOCON.NS)", "value": "BIOCON.NS"},
+    
+    # Telecom & Media
+    {"label": "Bharti Airtel (BHARTIARTL.NS)", "value": "BHARTIARTL.NS"},
+    
+    # Metals & Mining
+    {"label": "Tata Steel (TATASTEEL.NS)", "value": "TATASTEEL.NS"},
+    {"label": "JSW Steel (JSWSTEEL.NS)", "value": "JSWSTEEL.NS"},
+    {"label": "Hindalco Industries (HINDALCO.NS)", "value": "HINDALCO.NS"},
+    {"label": "Vedanta (VEDL.NS)", "value": "VEDL.NS"},
+    
+    # Cement & Construction
+    {"label": "Larsen & Toubro (LT.NS)", "value": "LT.NS"},
+    {"label": "UltraTech Cement (ULTRACEMCO.NS)", "value": "ULTRACEMCO.NS"},
+    {"label": "Grasim Industries (GRASIM.NS)", "value": "GRASIM.NS"},
+    {"label": "Ambuja Cements (AMBUJACEM.NS)", "value": "AMBUJACEM.NS"},
+    
+    # Retail & Consumer Durables
+    {"label": "Titan Company (TITAN.NS)", "value": "TITAN.NS"},
+    {"label": "Asian Paints (ASIANPAINT.NS)", "value": "ASIANPAINT.NS"},
+    {"label": "Havells India (HAVELLS.NS)", "value": "HAVELLS.NS"},
+    
+    # Diversified
+    {"label": "Adani Enterprises (ADANIENT.NS)", "value": "ADANIENT.NS"},
+    {"label": "Adani Ports (ADANIPORTS.NS)", "value": "ADANIPORTS.NS"},
+    {"label": "Tata Power (TATAPOWER.NS)", "value": "TATAPOWER.NS"},
+    {"label": "IndusInd Bank (INDUSINDBK.NS)", "value": "INDUSINDBK.NS"},
+    {"label": "Shree Cement (SHREECEM.NS)", "value": "SHREECEM.NS"},
+    {"label": "Bajaj Holdings (BAJAJHLDNG.NS)", "value": "BAJAJHLDNG.NS"},
+    
+    # Commodities - Gold (Multiple Options)
+    {"label": "Gold - Nippon India ETF (GOLDBEES.NS)", "value": "GOLDBEES.NS"},
+    {"label": "Gold - SBI ETF (SETFGOLD.NS)", "value": "SETFGOLD.NS"},
+    {"label": "Gold - HDFC Gold ETF (HDFCGOLD.NS)", "value": "HDFCGOLD.NS"},
+    
+    # Commodities - Silver
+    {"label": "Silver - Nippon India ETF (SILVERBEES.NS)", "value": "SILVERBEES.NS"},
+    {"label": "Silver - SBI ETF (SETFSILV.NS)", "value": "SETFSILV.NS"},
+    
     # Debt / Fixed Income
-    {"label": "Debt / Cash Equivalent - Liquid BeES (LIQUIDBEES.NS)", "value": "LIQUIDBEES.NS"},
-    {"label": "Govt Bonds - Long Term Gilt ETF (GILTBEES.NS)",        "value": "GILTBEES.NS"},
+    {"label": "Liquid Fund - Nippon BeES (LIQUIDBEES.NS)", "value": "LIQUIDBEES.NS"},
+    {"label": "Govt Bonds - Nippon Gilt ETF (GILTBEES.NS)", "value": "GILTBEES.NS"},
+    {"label": "Nifty 50 Index ETF (NIFTYBEES.NS)", "value": "NIFTYBEES.NS"},
 ]
 
 # --- UI LAYOUT ---
@@ -99,16 +162,16 @@ layout = html.Div([
         dbc.Row([
             dbc.Col(
                 dbc.Card(dbc.CardBody([
-                    html.Label("Select Asset to Analyze:", className="fw-bold text-muted mb-2"),
+                    html.Label("Select Your Portfolio Asset:", className="fw-bold text-muted mb-2"),
                     dcc.Dropdown(
                         id="ai-ticker-input",
-                        options=INDIAN_ASSETS,
-                        placeholder="Search Indian Equities & Commodities...",
+                        options=[],
+                        placeholder="Select from your portfolio...",
                         searchable=True,
                         clearable=True,
                         className="mb-3"
                     ),
-                    dbc.Button("Run Explainable AI", id="btn-run-ai",
+                    dbc.Button("PREDICT", id="btn-run-ai",
                                color="dark", className="w-100 btn")
                 ]), className="shadow-sm card border-0 selector-card"),
             xs=12
@@ -177,6 +240,7 @@ def _loading_banner(message="Building your portfolio dashboard, please wait...")
     Output("drawdown-area-chart",      "figure"),
     Output("dashboard-poll",           "disabled"),
     Output("dashboard-loading-banner", "children"),
+    Output("ai-ticker-input",          "options"),
     Input("session-store",             "data"),
     Input("dashboard-poll",            "n_intervals")
 )
@@ -185,7 +249,7 @@ def load_macro_dashboard(session, n_intervals):
                   go.Figure().update_layout(get_base_layout("Waiting for data...")))
 
     if not session or not session.get('user_id'):
-        return [], *empty_figs, True, None
+        return [], *empty_figs, True, None, []
 
     user_id = session['user_id']
 
@@ -194,7 +258,10 @@ def load_macro_dashboard(session, n_intervals):
         assets   = port_res.json().get("assets", [])
 
         if not assets:
-            return [], *empty_figs, False, _loading_banner()
+            return [], *empty_figs, False, _loading_banner(), []
+
+        # Build dropdown options from user's portfolio
+        portfolio_options = [{"label": f"{asset['ticker']}", "value": asset['ticker']} for asset in assets]
 
         pie_fig = px.pie(
             assets, names='ticker', values='weight', hole=0.45,
@@ -208,7 +275,7 @@ def load_macro_dashboard(session, n_intervals):
             data = diag_res.json()
 
             kpis = [
-                create_kpi_card("Total Historical Return", f"{data['total_return']}%"),
+                create_kpi_card("Total Returns (3yrs)", f"{data['total_return']}%"),
                 create_kpi_card("Value at Risk (95%)",     f"₹{data['var_95']:,.2f}"),
                 create_kpi_card("Maximum Drawdown",        f"{data['current_drawdown']}%", is_alert=True)
             ]
@@ -223,15 +290,15 @@ def load_macro_dashboard(session, n_intervals):
             draw_fig.update_layout(get_base_layout("Systemic Portfolio Drawdown"))
             draw_fig.update_yaxes(tickformat=".1%")
 
-            return kpis, pie_fig, draw_fig, True, None  # data ready — stop polling
+            return kpis, pie_fig, draw_fig, True, None, portfolio_options  # data ready — stop polling
 
         # assets exist but diagnostics not ready yet
-        return [], pie_fig, empty_figs[1], False, _loading_banner("Crunching portfolio diagnostics...")
+        return [], pie_fig, empty_figs[1], False, _loading_banner("Crunching portfolio diagnostics..."), portfolio_options
 
     except Exception as e:
         print(f"Dashboard load error: {e}")
 
-    return [], *empty_figs, False, _loading_banner()  # keep polling on error
+    return [], *empty_figs, False, _loading_banner(), []  # keep polling on error
 
 
 # --- LOGIC: MICRO EXPLAINABLE AI ---

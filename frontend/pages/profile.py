@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 from components.navbar import get_navbar
 from theme import COLORS
 
-dash.register_page(__name__, path='/profile', title="Profile - Squilla Fund")
+dash.register_page(__name__, path='/profile', title="Profile - RISK DASHBOARD")
 
 # --- UI LAYOUT ---
 layout = html.Div([

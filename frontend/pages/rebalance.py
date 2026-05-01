@@ -8,29 +8,100 @@ import os
 from components.navbar import get_navbar
 from theme import COLORS
 
-dash.register_page(__name__, path='/rebalance', title="Rebalance - Squilla Fund")
+dash.register_page(__name__, path='/rebalance', title="Rebalance - RISK DASHBOARD")
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 INDIAN_ASSETS = [
-    {"label": "Reliance Industries (RELIANCE.NS)", "value": "RELIANCE.NS"},
-    {"label": "Tata Consultancy Services (TCS.NS)", "value": "TCS.NS"},
+    # Nifty 50 Blue Chips - Banking & Financial Services
     {"label": "HDFC Bank (HDFCBANK.NS)", "value": "HDFCBANK.NS"},
-    {"label": "Infosys (INFY.NS)", "value": "INFY.NS"},
     {"label": "ICICI Bank (ICICIBANK.NS)", "value": "ICICIBANK.NS"},
     {"label": "State Bank of India (SBIN.NS)", "value": "SBIN.NS"},
-    {"label": "Bharti Airtel (BHARTIARTL.NS)", "value": "BHARTIARTL.NS"},
-    {"label": "ITC Limited (ITC.NS)", "value": "ITC.NS"},
-    {"label": "Hindustan Unilever (HINDUNILVR.NS)", "value": "HINDUNILVR.NS"},
-    {"label": "Larsen & Toubro (LT.NS)", "value": "LT.NS"},
-    {"label": "Bajaj Finance (BAJFINANCE.NS)", "value": "BAJFINANCE.NS"},
-    {"label": "Tata Motors (TATAMOTORS.NS)", "value": "TATAMOTORS.NS"},
-    {"label": "Mahindra & Mahindra (M&M.NS)", "value": "M&M.NS"},
-    {"label": "Asian Paints (ASIANPAINT.NS)", "value": "ASIANPAINT.NS"},
-    {"label": "Maruti Suzuki (MARUTI.NS)", "value": "MARUTI.NS"},
-    {"label": "Sun Pharmaceuticals (SUNPHARMA.NS)", "value": "SUNPHARMA.NS"},
     {"label": "Kotak Mahindra Bank (KOTAKBANK.NS)", "value": "KOTAKBANK.NS"},
-    {"label": "Titan Company (TITAN.NS)", "value": "TITAN.NS"}
+    {"label": "Axis Bank (AXISBANK.NS)", "value": "AXISBANK.NS"},
+    {"label": "Bajaj Finance (BAJFINANCE.NS)", "value": "BAJFINANCE.NS"},
+    {"label": "Bajaj Finserv (BAJAJFINSV.NS)", "value": "BAJAJFINSV.NS"},
+    {"label": "HDFC Life Insurance (HDFCLIFE.NS)", "value": "HDFCLIFE.NS"},
+    {"label": "SBI Life Insurance (SBILIFE.NS)", "value": "SBILIFE.NS"},
+    
+    # IT & Technology
+    {"label": "Tata Consultancy Services (TCS.NS)", "value": "TCS.NS"},
+    {"label": "Infosys (INFY.NS)", "value": "INFY.NS"},
+    {"label": "HCL Technologies (HCLTECH.NS)", "value": "HCLTECH.NS"},
+    {"label": "Wipro (WIPRO.NS)", "value": "WIPRO.NS"},
+    {"label": "Tech Mahindra (TECHM.NS)", "value": "TECHM.NS"},
+    
+    # Energy & Oil
+    {"label": "Reliance Industries (RELIANCE.NS)", "value": "RELIANCE.NS"},
+    {"label": "ONGC (ONGC.NS)", "value": "ONGC.NS"},
+    {"label": "NTPC (NTPC.NS)", "value": "NTPC.NS"},
+    {"label": "Power Grid Corporation (POWERGRID.NS)", "value": "POWERGRID.NS"},
+    {"label": "Coal India (COALINDIA.NS)", "value": "COALINDIA.NS"},
+    
+    # Automobiles
+    {"label": "Tata Motors (TATAMOTORS.NS)", "value": "TATAMOTORS.NS"},
+    {"label": "Maruti Suzuki (MARUTI.NS)", "value": "MARUTI.NS"},
+    {"label": "Mahindra & Mahindra (M%26M.NS)", "value": "M%26M.NS"},
+    {"label": "Bajaj Auto (BAJAJ-AUTO.NS)", "value": "BAJAJ-AUTO.NS"},
+    {"label": "Hero MotoCorp (HEROMOTOCO.NS)", "value": "HEROMOTOCO.NS"},
+    {"label": "Eicher Motors (EICHERMOT.NS)", "value": "EICHERMOT.NS"},
+    
+    # FMCG & Consumer
+    {"label": "Hindustan Unilever (HINDUNILVR.NS)", "value": "HINDUNILVR.NS"},
+    {"label": "ITC Limited (ITC.NS)", "value": "ITC.NS"},
+    {"label": "Nestle India (NESTLEIND.NS)", "value": "NESTLEIND.NS"},
+    {"label": "Britannia Industries (BRITANNIA.NS)", "value": "BRITANNIA.NS"},
+    {"label": "Dabur India (DABUR.NS)", "value": "DABUR.NS"},
+    {"label": "Godrej Consumer (GODREJCP.NS)", "value": "GODREJCP.NS"},
+    
+    # Pharmaceuticals
+    {"label": "Sun Pharmaceuticals (SUNPHARMA.NS)", "value": "SUNPHARMA.NS"},
+    {"label": "Dr. Reddy's Laboratories (DRREDDY.NS)", "value": "DRREDDY.NS"},
+    {"label": "Cipla (CIPLA.NS)", "value": "CIPLA.NS"},
+    {"label": "Divi's Laboratories (DIVISLAB.NS)", "value": "DIVISLAB.NS"},
+    {"label": "Biocon (BIOCON.NS)", "value": "BIOCON.NS"},
+    
+    # Telecom & Media
+    {"label": "Bharti Airtel (BHARTIARTL.NS)", "value": "BHARTIARTL.NS"},
+    
+    # Metals & Mining
+    {"label": "Tata Steel (TATASTEEL.NS)", "value": "TATASTEEL.NS"},
+    {"label": "JSW Steel (JSWSTEEL.NS)", "value": "JSWSTEEL.NS"},
+    {"label": "Hindalco Industries (HINDALCO.NS)", "value": "HINDALCO.NS"},
+    {"label": "Vedanta (VEDL.NS)", "value": "VEDL.NS"},
+    
+    # Cement & Construction
+    {"label": "Larsen & Toubro (LT.NS)", "value": "LT.NS"},
+    {"label": "UltraTech Cement (ULTRACEMCO.NS)", "value": "ULTRACEMCO.NS"},
+    {"label": "Grasim Industries (GRASIM.NS)", "value": "GRASIM.NS"},
+    {"label": "Ambuja Cements (AMBUJACEM.NS)", "value": "AMBUJACEM.NS"},
+    
+    # Retail & Consumer Durables
+    {"label": "Titan Company (TITAN.NS)", "value": "TITAN.NS"},
+    {"label": "Asian Paints (ASIANPAINT.NS)", "value": "ASIANPAINT.NS"},
+    {"label": "Havells India (HAVELLS.NS)", "value": "HAVELLS.NS"},
+    
+    # Diversified
+    {"label": "Adani Enterprises (ADANIENT.NS)", "value": "ADANIENT.NS"},
+    {"label": "Adani Ports (ADANIPORTS.NS)", "value": "ADANIPORTS.NS"},
+    {"label": "Tata Power (TATAPOWER.NS)", "value": "TATAPOWER.NS"},
+    {"label": "IndusInd Bank (INDUSINDBK.NS)", "value": "INDUSINDBK.NS"},
+    {"label": "Shree Cement (SHREECEM.NS)", "value": "SHREECEM.NS"},
+    {"label": "Bajaj Holdings (BAJAJHLDNG.NS)", "value": "BAJAJHLDNG.NS"},
+    
+    # Commodities - Gold (Multiple Options)
+    {"label": "Gold - Nippon India ETF (GOLDBEES.NS)", "value": "GOLDBEES.NS"},
+    {"label": "Gold - SBI ETF (SETFGOLD.NS)", "value": "SETFGOLD.NS"},
+    {"label": "Gold - HDFC Gold ETF (HDFCGOLD.NS)", "value": "HDFCGOLD.NS"},
+    
+    # Commodities - Silver
+    {"label": "Silver - Nippon India ETF (SILVERBEES.NS)", "value": "SILVERBEES.NS"},
+    {"label": "Silver - SBI ETF (SETFSILV.NS)", "value": "SETFSILV.NS"},
+    
+    # Debt / Fixed Income
+    {"label": "Liquid Fund - Nippon BeES (LIQUIDBEES.NS)", "value": "LIQUIDBEES.NS"},
+    {"label": "Govt Bonds - Nippon Gilt ETF (GILTBEES.NS)", "value": "GILTBEES.NS"},
+    {"label": "Nifty 50 Index ETF (NIFTYBEES.NS)", "value": "NIFTYBEES.NS"},
 ]
 
 # --- UI LAYOUT ---
@@ -161,7 +232,7 @@ def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, thresholds
             dbc.InputGroupText("Risk %:"),
             dbc.Input(
                 id={'type': 'dynamic-threshold-input', 'index': a['ticker']}, 
-                type="number", value=float(a.get('risk_threshold', 1.5)), step=0.1, min=0.001,
+                type="number", value=float(a.get('risk_threshold', 1.5)), step=0.1, min=0.1,
                 style={"color": "#2C3E50", "fontSize": "15px"}
             ),
             dbc.Button(html.I(className="bi bi-trash"), id={'type': 'btn-delete-asset', 'index': a['ticker']}, color="danger", outline=True)

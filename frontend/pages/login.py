@@ -7,7 +7,7 @@ import os
 import jwt # <-- We use this to read Google's secure token
 from dotenv import load_dotenv
 
-dash.register_page(__name__, path='/login', title="Login - Squilla Fund")
+dash.register_page(__name__, path='/login', title="Login - RISK DASHBOARD")
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
@@ -31,7 +31,7 @@ layout = dbc.Container([
                 dbc.CardBody([
                     html.Div([
                         html.I(className="bi bi-shield-lock text-center", style={"fontSize": "3rem", "color": "#388087"}),
-                        html.H2("Squilla Fund", className="text-center mt-2 mb-4", style={"color": "#2C3E50"}),
+                        html.H2("RISK DASHBOARD", className="text-center mt-2 mb-4", style={"color": "#2C3E50"}),
                     ], className="text-center"),
                     
                     # Standard Login Form

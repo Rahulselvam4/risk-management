@@ -6,7 +6,7 @@ import requests
 import os
 
 # Register this file as a route in the application
-dash.register_page(__name__, path='/register', title="Register - Squilla Fund")
+dash.register_page(__name__, path='/register', title="Register -  RISK DASHBOARD")
 
 # Use 127.0.0.1 since we are running the Hybrid Local setup
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
