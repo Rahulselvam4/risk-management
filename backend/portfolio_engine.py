@@ -14,12 +14,14 @@ logger = logging.getLogger("PortfolioEngine")
 load_dotenv()
 
 class PortfolioCalculator:
-    def __init__(self, user_portfolio: list):
+    # NEW: Added total_capital parameter (defaulting to 100,000 for safety)
+    def __init__(self, user_portfolio: list, total_capital: float = 100000.0):
         """
         Expects a list of dictionaries mapping assets to weights.
         Example: [{'ticker': 'AAPL', 'weight': 0.6}, {'ticker': 'MSFT', 'weight': 0.4}]
         """
         self.user_portfolio = user_portfolio
+        self.total_capital = total_capital
         self._engine = self._create_db_engine()
         self.portfolio_df = self._build_combined_timeseries()
 
@@ -129,10 +131,11 @@ class PortfolioCalculator:
             
             # 2. Value at Risk (VaR) 95% Calculation
             # Finds the 5th percentile worst daily drop. 
-            # We assume a baseline $10,000 portfolio for the UI dollar display.
             daily_returns = self.portfolio_df['total_daily_return'].dropna()
             var_95_percent = np.percentile(daily_returns, 5)
-            var_95_dollars = round(abs(var_95_percent) * 10000, 2)
+            
+            # NEW: Multiply by the user's specific total capital instead of a hardcoded value
+            var_95_currency = round(abs(var_95_percent) * self.total_capital, 2)
             
             # 3. Macro Metrics
             current_drawdown = round(self.portfolio_df['drawdown'].iloc[-1] * 100, 2)
@@ -144,7 +147,7 @@ class PortfolioCalculator:
                 "drawdown_history": self.portfolio_df['drawdown'].round(4).tolist(),
                 "current_drawdown": current_drawdown,
                 "total_return": total_return,
-                "var_95": var_95_dollars 
+                "var_95": var_95_currency # Output the real, personalized VaR!
             }
         except Exception as e:
             logger.error(f"Error extracting portfolio metrics: {e}")

@@ -6,6 +6,7 @@ import requests
 import os
 from components.navbar import get_navbar
 from theme import COLORS
+import logging
 
 dash.register_page(__name__, path='/setup', title="Initial Setup - Squilla Fund")
 
@@ -62,7 +63,7 @@ layout = html.Div([
                         # --- NEW INPUT FOR RISK THRESHOLD ---
                         dbc.InputGroup([
                             dbc.InputGroupText("Risk Threshold (%)"),
-                            dbc.Input(id="setup-threshold", type="number", min=0.001, max=50.0, step=0.1, value=1.5)
+                            dcc.Input(id="setup-threshold", type="number", min=0.001, max=50.0, step=0.1, value=1.5, debounce=False, className="form-control", style={"color": "#2C3E50", "fontSize": "15px", "padding": "0.25rem"})
                         ], className="mb-3"),
                         
                         dbc.Button("Add to Staging", id="btn-stage-asset", color="dark", className="w-100 btn")
@@ -82,9 +83,16 @@ layout = html.Div([
                             html.Span(id="total-weight-display", className="fs-5")
                         ], className="mb-3"),
                         
+                        # --- NEW: TOTAL CAPITAL INPUT ---
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Total Investment Capital (₹)", style={"fontWeight": "bold"}),
+                            dbc.Input(id="setup-capital", type="number", min=1000, step=1000, value=100000)
+                        ], className="mb-4"),
+                        
                         dbc.Button("Finalize & Launch Workspace", id="btn-finalize-setup", color="success", className="w-100 btn", disabled=True),
                         html.Div(id="setup-alert", className="mt-3"),
-                        dcc.Location(id="setup-redirect", refresh=True)
+                        dcc.Location(id="setup-redirect", refresh=True),
+                        dcc.Interval(id="setup-poll", interval=2000, n_intervals=0, disabled=True)
                     ])
                 ], className="shadow-sm")
             ], width=8)
@@ -109,20 +117,48 @@ layout = html.Div([
     prevent_initial_call=True
 )
 def stage_asset(n_clicks, ticker, weight, threshold, current_portfolio):
-    if not ticker or not weight or not threshold:
+    try:
+        # Immediate server-side debug output (visible in the Dash terminal)
+        print(f"stage_asset called - clicks={n_clicks}, ticker={ticker}, weight={weight}, threshold={threshold}, current_portfolio={current_portfolio}")
+        import sys
+        sys.stdout.flush()
+
+        # Validate ticker and weight; default threshold to 1.5 if not provided
+        if not ticker:
+            print("stage_asset: validation failed - missing ticker")
+            sys.stdout.flush()
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+        if weight is None:
+            print("stage_asset: validation failed - missing weight")
+            sys.stdout.flush
+            ()
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+        if threshold is None:
+            print("stage_asset: threshold missing from client — defaulting to 1.5")
+            sys.stdout.flush()
+            threshold = 1.5
+
+        # Log via logger as well
+        logger = logging.getLogger("frontend.setup")
+        logger.info(f"stage_asset called - clicks={n_clicks}, ticker={ticker}, weight={weight}, threshold={threshold}, current_portfolio={current_portfolio}")
+
+        ticker = ticker.upper()
+
+        for item in current_portfolio:
+            if item['ticker'] == ticker:
+                item['weight'] = weight
+                item['risk_threshold'] = threshold
+                return current_portfolio, None, None, dash.no_update
+
+        # Include risk threshold in the payload
+        current_portfolio.append({"ticker": ticker, "weight": weight, "risk_threshold": threshold})
+        return current_portfolio, None, None, dash.no_update
+    except Exception as e:
+        print(f"stage_asset: exception: {e}")
+        sys.stdout.flush()
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update
-        
-    ticker = ticker.upper()
-    
-    for item in current_portfolio:
-        if item['ticker'] == ticker:
-            item['weight'] = weight
-            item['risk_threshold'] = threshold
-            return current_portfolio, None, "", 1.5 
-            
-    # Include risk threshold in the payload
-    current_portfolio.append({"ticker": ticker, "weight": weight, "risk_threshold": threshold})
-    return current_portfolio, None, "", 1.5 
 
 @callback(
     Output('staged-assets-list', 'children'),
@@ -151,27 +187,68 @@ def update_ui(portfolio):
         return items, weight_str, {"color": COLORS["alert_red"], "fontWeight": "bold"}, True
 
 @callback(
-    Output('setup-alert', 'children'),
+    Output('setup-alert', 'children', allow_duplicate=True),
     Output('setup-redirect', 'pathname'),
+    Output('setup-poll', 'disabled'),
     Input('btn-finalize-setup', 'n_clicks'),
+    State('setup-capital', 'value'),
     State('staged-portfolio', 'data'),
     State('session-store', 'data'),
     prevent_initial_call=True
 )
-def finalize_setup(n_clicks, portfolio, session):
+def finalize_setup(n_clicks, capital, portfolio, session):
     user_id = session.get('user_id')
     if not user_id:
-        return dbc.Alert("Session expired. Please log in again.", color="danger"), "/login"
-        
+        return dbc.Alert("Session expired. Please log in again.", color="danger"), "/login", True
+
     try:
-        res = requests.put(f"{API_URL}/portfolio/{user_id}/rebalance", json={"assets": portfolio})
+        payload = {
+            "assets": portfolio,
+            "total_capital": float(capital) if capital else 100000.0
+        }
+        res = requests.put(f"{API_URL}/portfolio/{user_id}/rebalance", json=payload)
+
         if res.status_code == 200:
-            return dash.no_update, "/dashboard"
+            alert = html.Div([
+                dbc.Spinner(size="sm", color="success", spinner_class_name="me-2"),
+                html.Span("Portfolio saved! Waiting for market data pipeline...", className="text-success fw-bold")
+            ], className="d-flex align-items-center")
+            return alert, dash.no_update, False  # start polling
         else:
             try:
                 detail = res.json().get('detail', 'Failed to save portfolio.')
             except Exception:
                 detail = f"Failed to save portfolio (status {res.status_code})"
-            return dbc.Alert(detail, color="danger"), dash.no_update
+            return dbc.Alert(detail, color="danger"), dash.no_update, True
     except Exception as e:
-        return dbc.Alert(f"API Error: {e}", color="danger"), dash.no_update
+        return dbc.Alert(f"API Error: {e}", color="danger"), dash.no_update, True
+
+
+@callback(
+    Output('setup-redirect', 'pathname', allow_duplicate=True),
+    Output('setup-poll', 'disabled', allow_duplicate=True),
+    Output('setup-alert', 'children', allow_duplicate=True),
+    Input('setup-poll', 'n_intervals'),
+    State('session-store', 'data'),
+    prevent_initial_call=True
+)
+def poll_for_data(n_intervals, session):
+    if not session or not session.get('user_id'):
+        return dash.no_update, True, dash.no_update
+    user_id = session['user_id']
+    try:
+        port_res = requests.get(f"{API_URL}/portfolio/{user_id}", timeout=3)
+        if port_res.status_code == 200 and port_res.json().get('assets'):
+            diag_res = requests.get(f"{API_URL}/portfolio/{user_id}/diagnostics", timeout=3)
+            if diag_res.status_code == 200:
+                return "/dashboard", True, dash.no_update  # fully ready — redirect
+            # assets saved, waiting for Kafka + diagnostics
+            dots = "." * ((n_intervals % 3) + 1)
+            msg = html.Div([
+                dbc.Spinner(size="sm", color="success", spinner_class_name="me-2"),
+                html.Span(f"Portfolio saved! Building dashboard{dots}", className="text-success fw-bold")
+            ], className="d-flex align-items-center")
+            return dash.no_update, False, msg
+    except Exception:
+        pass
+    return dash.no_update, False, dash.no_update  # keep polling

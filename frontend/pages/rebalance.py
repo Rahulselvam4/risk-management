@@ -72,13 +72,20 @@ layout = html.Div([
                         
                         dbc.Progress(id="rebalance-progress-bar", value=0, className="mt-3 mb-4", style={"height": "10px"}),
                         
+                        # --- NEW: TOTAL CAPITAL INPUT ---
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Total Investment Capital (₹)", style={"fontWeight": "bold"}),
+                            dbc.Input(id="rebalance-capital", type="number", min=1000, step=1000)
+                        ], className="mb-4"),
+                        
                         dbc.Row([
                             dbc.Col(dbc.Button("Cancel", href="/dashboard", color="light", className="w-100 btn text-dark")),
                             dbc.Col(dbc.Button("Apply New Setup", id="btn-submit-rebalance", color="primary", className="w-100 btn", disabled=True))
                         ]),
                         
                         html.Div(id="rebalance-alert", className="mt-3"),
-                        dcc.Location(id="rebalance-redirect", refresh=True)
+                        dcc.Location(id="rebalance-redirect", refresh=True),
+                        html.Pre(id='rebalance-debug', style={"whiteSpace": "pre-wrap", "fontSize": "13px", "color": "#2C3E50", "marginTop": "1rem"})
                     ])
                 ], className="shadow-sm border-0 mt-4", style={"maxWidth": "800px", "margin": "0 auto"})
             ])
@@ -90,11 +97,12 @@ layout = html.Div([
 # --- LOGIC 1: MASTER UI GENERATOR ---
 @callback(
     Output("rebalance-asset-container", "children"),
+    Output("rebalance-capital", "value"),
     Input("rebalance-loc", "pathname"),
     Input("btn-add-asset", "n_clicks"),
     Input({'type': 'btn-delete-asset', 'index': ALL}, 'n_clicks'),
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'value'),
-    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'value'), # Capture current thresholds
+    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'value'),
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'id'),
     State("new-asset-dropdown", "value"),
     State("session-store", "data"),
@@ -102,7 +110,7 @@ layout = html.Div([
 )
 def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, thresholds, weight_ids, new_ticker, session):
     if not session or not session.get('user_id'):
-        return [dbc.Alert("Unauthorized. Please log in.", color="danger")]
+        return [dbc.Alert("Unauthorized. Please log in.", color="danger")], dash.no_update
 
     user_id = session['user_id']
     triggered_id = ctx.triggered_id
@@ -116,12 +124,17 @@ def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, thresholds
                 "risk_threshold": t if t is not None else 1.5
             })
 
+    capital_val = dash.no_update
+
     if not triggered_id or triggered_id == "rebalance-loc":
         try:
             res = requests.get(f"{API_URL}/portfolio/{user_id}")
-            current_portfolio = res.json().get("assets", [])
+            data = res.json()
+            current_portfolio = data.get("assets", [])
+            # NEW: Grab the total capital from the backend to pre-fill the box
+            capital_val = data.get("total_capital", 100000.0)
         except Exception as e:
-            return [dbc.Alert(f"Database Error: {e}", color="danger")]
+            return [dbc.Alert(f"Database Error: {e}", color="danger")], dash.no_update
 
     elif triggered_id == "btn-add-asset":
         if new_ticker and not any(p['ticker'] == new_ticker for p in current_portfolio):
@@ -132,7 +145,7 @@ def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, thresholds
         current_portfolio = [p for p in current_portfolio if p['ticker'] != deleted_ticker]
 
     if not current_portfolio:
-        return [dbc.Alert("Your portfolio is empty. Add a stock using the search bar above.", color="info")]
+        return [dbc.Alert("Your portfolio is empty. Add a stock using the search bar above.", color="info")], capital_val
 
     input_rows = []
     for a in current_portfolio:
@@ -141,19 +154,21 @@ def render_rebalance_ui(pathname, add_clicks, delete_clicks, weights, thresholds
             dbc.InputGroupText("Wt:"),
             dbc.Input(
                 id={'type': 'dynamic-weight-input', 'index': a['ticker']}, 
-                type="number", value=float(a.get('weight', 0)), step=0.01, min=0, max=1
+                type="number", value=float(a.get('weight', 0)), step=0.01, min=0, max=1,
+                style={"color": "#2C3E50", "fontSize": "15px"}
             ),
-            # NEW: Dynamic Threshold Input Field
+            # Dynamic Threshold Input Field
             dbc.InputGroupText("Risk %:"),
             dbc.Input(
                 id={'type': 'dynamic-threshold-input', 'index': a['ticker']}, 
-                type="number", value=float(a.get('risk_threshold', 1.5)), step=0.1, min=0.001
+                type="number", value=float(a.get('risk_threshold', 1.5)), step=0.1, min=0.001,
+                style={"color": "#2C3E50", "fontSize": "15px"}
             ),
             dbc.Button(html.I(className="bi bi-trash"), id={'type': 'btn-delete-asset', 'index': a['ticker']}, color="danger", outline=True)
         ], className="mb-3 shadow-sm")
         input_rows.append(row)
 
-    return input_rows
+    return input_rows, capital_val
 
 
 # --- LOGIC 2: Real-Time Math Validation ---
@@ -182,22 +197,35 @@ def validate_weights(weights):
         return f"{total_rounded} (Need {round(1.0 - total_rounded, 2)} more)", {"color": COLORS["muted_aqua"], "fontWeight": "bold"}, progress, "info", True
 
 
+@callback(
+    Output('rebalance-debug', 'children'),
+    Input({'type': 'dynamic-weight-input', 'index': ALL}, 'value'),
+    Input({'type': 'dynamic-threshold-input', 'index': ALL}, 'value')
+)
+def show_debug(weights, thresholds):
+    return f"weights: {weights}\nthresholds: {thresholds}"
+
+
 # --- LOGIC 3: API Submission ---
 @callback(
     Output("rebalance-alert", "children"),
     Output("rebalance-redirect", "pathname"),
     Input("btn-submit-rebalance", "n_clicks"),
+    State('rebalance-capital', 'value'), # NEW: Capture the capital input
     State({'type': 'dynamic-weight-input', 'index': ALL}, 'value'),
-    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'value'), # Capture final thresholds
-    State({'type': 'dynamic-weight-input', 'index': ALL}, 'id'),
+    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'value'),
+    State({'type': 'dynamic-threshold-input', 'index': ALL}, 'id'),
     State("session-store", "data"),
     prevent_initial_call=True
 )
-def submit_rebalance(n_clicks, weights, thresholds, weight_ids, session):
+def submit_rebalance(n_clicks, capital, weights, thresholds, threshold_ids, session):
     user_id = session.get('user_id')
-    # Build the payload matching the backend schema (ticker, weight, risk_threshold)
+    print(f"submit_rebalance called - weights={weights}, thresholds={thresholds}, threshold_ids={threshold_ids}")
+    import sys
+    sys.stdout.flush()
+    
     new_portfolio = []
-    for w, t, w_id in zip(weights, thresholds, weight_ids):
+    for w, t, t_id in zip(weights, thresholds, threshold_ids):
         try:
             weight_val = float(w) if w is not None else 0.0
         except Exception:
@@ -206,10 +234,15 @@ def submit_rebalance(n_clicks, weights, thresholds, weight_ids, session):
             thresh_val = float(t) if t is not None else 1.5
         except Exception:
             thresh_val = 1.5
-        new_portfolio.append({"ticker": w_id['index'], "weight": weight_val, "risk_threshold": thresh_val})
+        new_portfolio.append({"ticker": t_id['index'], "weight": weight_val, "risk_threshold": thresh_val})
     
     try:
-        res = requests.put(f"{API_URL}/portfolio/{user_id}/rebalance", json={"assets": new_portfolio})
+        # NEW: Construct the new payload including the user's capital
+        payload = {
+            "assets": new_portfolio,
+            "total_capital": float(capital) if capital else 100000.0
+        }
+        res = requests.put(f"{API_URL}/portfolio/{user_id}/rebalance", json=payload)
         
         if res.status_code == 200:
             return dash.no_update, "/dashboard"

@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE users 
+ADD COLUMN total_capital FLOAT DEFAULT 100000;
+
 -- 2. Table for storing the user's selected stocks and weights
 CREATE TABLE IF NOT EXISTS portfolios (
     id INT AUTO_INCREMENT PRIMARY KEY,

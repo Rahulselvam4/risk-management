@@ -1,10 +1,8 @@
 # frontend/app.py
 import dash
-from dash import html, dcc
+from dash import html, dcc, Input, Output, callback
 import dash_bootstrap_components as dbc
 
-# Initialize the app with Dash Pages enabled (The React-style router)
-# We use the LUX theme as a high-end, clean Bootstrap baseline
 app = dash.Dash(
     __name__, 
     use_pages=True, 
@@ -14,17 +12,26 @@ app = dash.Dash(
 
 app.title = "Enterprise Risk Platform"
 
-# Global Session Storage
-# This invisible component stores the user's ID and JWT Token securely in their browser session
-session_store = dcc.Store(id='session-store', storage_type='session', data={"user_id": None, "token": None})
+PUBLIC_ROUTES = {"/login", "/register"}
 
-# The Master Layout
-# dash.page_container dynamically injects the correct page (login, dashboard, etc.) based on the URL
 app.layout = html.Div([
-    session_store,
+    dcc.Location(id="url", refresh=False),
+    dcc.Store(id='session-store', storage_type='session', data={"user_id": None, "token": None}),
+    dcc.Location(id="auth-redirect", refresh=True),
     dash.page_container 
 ])
 
+@callback(
+    Output("auth-redirect", "pathname"),
+    Input("url", "pathname"),
+    Input("session-store", "data")
+)
+def guard(pathname, session):
+    if pathname in PUBLIC_ROUTES:
+        return dash.no_update
+    if not session or not session.get("user_id"):
+        return "/login"
+    return dash.no_update
+
 if __name__ == '__main__':
-    # In production (Docker), this will be bound to 0.0.0.0
-    app.run(debug=True, port=8050, host="0.0.0.0")
+    app.run(debug=True, port=8050, host="127.0.0.1")
