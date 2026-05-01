@@ -194,6 +194,15 @@ layout = html.Div([
                 )
             ]), className="shadow-sm card border-0 chart-card"), xs=12, md=6)
         ], className="mb-4"),
+        
+        # NEW: Model Confidence Card
+        dbc.Row([
+            dbc.Col(dbc.Card([
+                dbc.CardHeader([html.I(className="bi bi-shield-check me-2"), "Model Confidence Metrics"],
+                               style={"backgroundColor": COLORS["deep_teal"], "color": "white", "fontWeight": "bold"}),
+                dbc.CardBody(id="model-confidence-display")
+            ], className="shadow-sm border-0"), width=12)
+        ], className="mb-4"),
 
         # --- THE EXPLANATION BOX ---
         dbc.Row([
@@ -305,24 +314,24 @@ def load_macro_dashboard(session, n_intervals):
 @callback(
     Output("ma-price-chart",      "figure"),
     Output("shap-waterfall-chart","figure"),
+    Output("model-confidence-display", "children"),
     Input("btn-run-ai",           "n_clicks"),
     State("ai-ticker-input",      "value"),
-    State("session-store",        "data"), # Inject session to retrieve user_id
+    State("session-store",        "data"),
     prevent_initial_call=True
 )
 def run_micro_ai(n_clicks, ticker, session):
     if not ticker or not session or not session.get('user_id'):
-        return go.Figure(), go.Figure()
+        return go.Figure(), go.Figure(), html.P("No prediction run yet.", className="text-muted")
 
     ticker = ticker.upper()
     user_id = session['user_id']
 
-    # 1. Technical Chart — now uses High/Low for a candlestick + MA overlay
+    # 1. Technical Chart
     try:
         df = yf.download(ticker, period="3mo", progress=False)
 
         if not df.empty:
-            # Flatten MultiIndex columns if present (yfinance ≥ 0.2)
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
 
@@ -330,8 +339,6 @@ def run_micro_ai(n_clicks, ticker, session):
             df['SMA_30'] = df['Close'].rolling(window=30).mean()
 
             ma_fig = go.Figure()
-
-            # Candlestick gives more price-risk context than a plain line
             ma_fig.add_trace(go.Candlestick(
                 x=df.index,
                 open=df['Open'], high=df['High'],
@@ -362,13 +369,13 @@ def run_micro_ai(n_clicks, ticker, session):
     except Exception:
         ma_fig = go.Figure().update_layout(get_base_layout("Error Fetching Chart Data"))
 
-    # 2. Backend Random Forest → SHAP waterfall
+    # 2. Backend ML Prediction + Model Confidence
     try:
-        # Pings the new backend route, passing the user_id to look up the custom threshold
         res = requests.get(f"{API_URL}/predict/{user_id}/{ticker}")
         if res.status_code == 200:
             data      = res.json()
             shap_data = data.get("shap_breakdown", [])
+            confidence = data.get("model_confidence", {})
 
             features = [item['feature']           for item in shap_data]
             impacts  = [item['impact_percentage']  for item in shap_data]
@@ -389,9 +396,51 @@ def run_micro_ai(n_clicks, ticker, session):
             shap_fig.update_layout(
                 get_base_layout(f"AI Decision: {rec_text} ({data['risk_probability']}% chance of a >{threshold}% drop)")
             )
-            return ma_fig, shap_fig
+            
+            # Build confidence display
+            if confidence:
+                trust_score = confidence.get('trust_score', 'UNKNOWN')
+                trust_colors = {"HIGH": "success", "MEDIUM": "warning", "LOW": "danger"}
+                trust_icons = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}
+                
+                confidence_ui = dbc.Row([
+                    dbc.Col([
+                        html.H4([trust_icons.get(trust_score, "⚪"), f" {trust_score} CONFIDENCE"], 
+                                className=f"text-{trust_colors.get(trust_score, 'secondary')}"),
+                        html.P(confidence.get('explanation', ''), className="text-muted small")
+                    ], width=12, className="mb-3"),
+                    
+                    dbc.Col([
+                        html.Strong("Recall (Crash Detection):"),
+                        html.P(f"{confidence.get('recall', 0):.1f}%", className="mb-0 text-success" if confidence.get('recall', 0) >= 65 else "mb-0")
+                    ], width=3),
+                    dbc.Col([
+                        html.Strong("Precision (Accuracy):"),
+                        html.P(f"{confidence.get('precision', 0):.1f}%", className="mb-0")
+                    ], width=3),
+                    dbc.Col([
+                        html.Strong("F2-Score:"),
+                        html.P(f"{confidence.get('f2_score', 0):.1f}%", className="mb-0")
+                    ], width=3),
+                    dbc.Col([
+                        html.Strong("ROC-AUC:"),
+                        html.P(f"{confidence.get('roc_auc', 0):.2f}", className="mb-0")
+                    ], width=3),
+                    
+                    dbc.Col([
+                        html.Hr(className="my-3"),
+                        html.Small([
+                            html.Strong("Validated on: "),
+                            f"{confidence.get('validation_days', 0)} days of hidden test data"
+                        ], className="text-muted")
+                    ], width=12)
+                ])
+            else:
+                confidence_ui = html.P("Model confidence metrics not available.", className="text-muted")
+            
+            return ma_fig, shap_fig, confidence_ui
 
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Prediction error: {e}")
 
-    return ma_fig, go.Figure().update_layout(get_base_layout("AI Request Failed"))
+    return ma_fig, go.Figure().update_layout(get_base_layout("AI Request Failed")), html.P("Prediction failed.", className="text-danger")

@@ -1,5 +1,6 @@
 venv/
 __pycache__/
 .env
-*.pkl
 backend/__pycache__/
+notes.txt
+ML_PIPELINE_DOCUMENTATION.md

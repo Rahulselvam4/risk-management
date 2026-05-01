@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.database import get_db_connection
-from backend.ml_model import RiskPredictor
+from backend.ml_model import RiskPredictor, MultiThresholdPredictor
 from backend.portfolio_engine import PortfolioCalculator
 from backend.auth import create_access_token, get_password_hash, verify_password
 from backend.kafka_producer import trigger_kafka_pipeline
@@ -339,8 +339,9 @@ def get_risk_forecast(user_id: int, ticker: str):
         if user_threshold is None:
             user_threshold = 1.5
 
-        predictor = RiskPredictor(ticker.upper(), threshold_pct=user_threshold)
-        forecast = predictor.train_and_predict()
+        # Use multi-threshold ensemble for better performance
+        predictor = MultiThresholdPredictor(ticker.upper(), user_threshold)
+        forecast = predictor.predict()
         
         if "error" in forecast:
             raise HTTPException(status_code=400, detail=forecast["error"])

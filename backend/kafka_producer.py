@@ -171,7 +171,7 @@ def fetch_fundamentals(ticker_obj) -> dict:
 
 def fetch_data_with_retry(ticker: str, retries: int = 3):
     """
-    Fetches 3 years of OHLCV history from Yahoo Finance + fundamental ratios.
+    Fetches 5 years of OHLCV history from Yahoo Finance + fundamental ratios.
     Returns (DataFrame, fundamentals_dict) or (None, None) on failure.
     """
     for attempt in range(retries):
@@ -179,8 +179,8 @@ def fetch_data_with_retry(ticker: str, retries: int = 3):
             logger.info(f"Fetching data for {ticker} (Attempt {attempt + 1}/{retries})...")
             ticker_obj = yf.Ticker(ticker)
 
-            # --- 3 years of daily OHLCV ---
-            df = ticker_obj.history(period="3y")
+            # --- 5 years of daily OHLCV (was 3y) ---
+            df = ticker_obj.history(period="5y")
 
             if df is not None and not df.empty:
                 df = df.dropna(subset=["Close"])   # Close is mandatory; others may be NaN
@@ -199,8 +199,7 @@ def fetch_data_with_retry(ticker: str, retries: int = 3):
 
 def trigger_kafka_pipeline(ticker: str):
     """
-    Main entry point for FastAPI Background Tasks.
-    Fetches enriched OHLCV + fundamental data and streams it into Kafka.
+    Fetches enriched OHLCV + fundamental data for 5 years and streams it into Kafka.
     """
     logger.info(f"Background Task Started: Ingesting data for {ticker}")
 
