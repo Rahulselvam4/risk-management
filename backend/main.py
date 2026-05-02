@@ -11,6 +11,7 @@ from backend.ml_model import RiskPredictor, MultiThresholdPredictor
 from backend.portfolio_engine import PortfolioCalculator
 from backend.auth import create_access_token, get_password_hash, verify_password
 from backend.kafka_producer import trigger_kafka_pipeline
+from backend.alert_worker import start_alert_scheduler
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -18,6 +19,14 @@ logger = logging.getLogger("FastAPI-Main")
 logger.setLevel(logging.INFO)
 
 app = FastAPI(title="Enterprise Risk Platform API", version="2.0.0")
+
+# --- STARTUP EVENT: Initialize Alert Scheduler ---
+@app.on_event("startup")
+def startup_event():
+    """Start background services on application startup."""
+    logger.info("Starting background services...")
+    start_alert_scheduler()
+    logger.info("Alert scheduler initialized successfully")
 
 def ensure_risk_column(conn):
     """Ensure the portfolios table has a risk_threshold column (adds it if missing)."""
@@ -62,6 +71,9 @@ class StandardLoginItem(BaseModel):
 class GoogleLoginItem(BaseModel):
     email: str
     google_id: str
+
+class AlertPreferences(BaseModel):
+    enabled: bool
 
 
 # --- 1. AUTHENTICATION ENDPOINTS ---
@@ -354,7 +366,63 @@ def get_risk_forecast(user_id: int, ticker: str):
         cursor.close()
         conn.close()
         
-# --- 5. SYSTEM DATA ---
+# --- 5. EMAIL ALERT PREFERENCES ---
+
+@app.get("/user/{user_id}/alert-preferences", tags=["User Settings"])
+def get_alert_preferences(user_id: int):
+    """Get user's email alert preferences."""
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute(
+            "SELECT email_alerts_enabled, alert_threshold, last_alert_sent FROM users WHERE id = %s",
+            (user_id,)
+        )
+        result = cursor.fetchone()
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "enabled": bool(result.get('email_alerts_enabled', False)),
+            "threshold": result.get('alert_threshold', 50),
+            "last_alert_sent": result.get('last_alert_sent')
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.put("/user/{user_id}/alert-preferences", tags=["User Settings"])
+def update_alert_preferences(user_id: int, preferences: AlertPreferences):
+    """Update user's email alert preferences."""
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            "UPDATE users SET email_alerts_enabled = %s WHERE id = %s",
+            (preferences.enabled, user_id)
+        )
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        status = "enabled" if preferences.enabled else "disabled"
+        logger.info(f"Email alerts {status} for user {user_id}")
+        
+        return {"message": f"Email alerts successfully {status}", "enabled": preferences.enabled}
+    except Exception as e:
+        logger.error(f"Error updating alert preferences for user {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update alert preferences")
+    finally:
+        cursor.close()
+        conn.close()
+
+# --- 6. SYSTEM DATA ---
 
 @app.get("/available-tickers", tags=["System"])
 def get_available_tickers():
