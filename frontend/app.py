@@ -12,7 +12,7 @@ app = dash.Dash(
 
 app.title = "Enterprise Risk Platform"
 
-PUBLIC_ROUTES = {"/login", "/register"}
+PUBLIC_ROUTES = {"/login", "/register", "/forgot-password"}
 
 app.layout = html.Div([
     dcc.Location(id="url", refresh=False),

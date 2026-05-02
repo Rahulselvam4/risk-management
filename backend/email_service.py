@@ -210,3 +210,96 @@ def send_digest_email(user_email: str, digest_data: dict) -> bool:
     except Exception as e:
         logger.error(f"Failed to send email to {user_email}: {e}")
         return False
+
+
+def send_otp_email(user_email: str, otp_code: str, purpose: str) -> bool:
+    """Send OTP email for registration or password reset."""
+    try:
+        smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_password = os.getenv("SMTP_PASSWORD")
+        from_email = os.getenv("ALERT_FROM_EMAIL", smtp_user)
+        from_name = os.getenv("ALERT_FROM_NAME", "Risk Dashboard")
+        
+        if not smtp_user or not smtp_password:
+            logger.error("SMTP credentials not configured")
+            return False
+        
+        # Determine subject and content based on purpose
+        if purpose == "registration":
+            subject = "Verify Your Email - Risk Dashboard"
+            title = "Email Verification"
+            message = "Thank you for registering! Please use the OTP below to verify your email address."
+        else:  # password_reset
+            subject = "Reset Your Password - Risk Dashboard"
+            title = "Password Reset"
+            message = "You requested to reset your password. Use the OTP below to proceed."
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f6f6f2; margin: 0; padding: 20px; }}
+                .container {{ max-width: 500px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+                .header {{ background-color: #388087; color: white; padding: 30px; text-align: center; }}
+                .header h1 {{ margin: 0; font-size: 24px; }}
+                .content {{ padding: 40px 30px; text-align: center; }}
+                .otp-box {{ background-color: #f0f0f0; padding: 20px; border-radius: 8px; margin: 30px 0; }}
+                .otp-code {{ font-size: 36px; font-weight: bold; color: #388087; letter-spacing: 8px; }}
+                .message {{ color: #555; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }}
+                .warning {{ color: #e63946; font-size: 12px; margin-top: 20px; }}
+                .footer {{ background-color: #f6f6f2; padding: 20px; text-align: center; font-size: 12px; color: #666; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>{title}</h1>
+                </div>
+                
+                <div class="content">
+                    <p class="message">{message}</p>
+                    
+                    <div class="otp-box">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 10px;">YOUR OTP CODE</div>
+                        <div class="otp-code">{otp_code}</div>
+                    </div>
+                    
+                    <p class="message">This OTP is valid for 10 minutes.</p>
+                    <p class="warning">⚠️ If you didn't request this, please ignore this email.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>Risk Management Dashboard</p>
+                    <p style="color: #999;">Do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"{from_name} <{from_email}>"
+        msg['To'] = user_email
+        
+        # Attach HTML
+        html_part = MIMEText(html_content, 'html')
+        msg.attach(html_part)
+        
+        # Send email
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        
+        logger.info(f"OTP email sent successfully to {user_email} for {purpose}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send OTP email to {user_email}: {e}")
+        return False

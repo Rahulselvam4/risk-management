@@ -10,7 +10,6 @@ USE risk_management;
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    google_id VARCHAR(255) UNIQUE DEFAULT NULL,
     password_hash VARCHAR(255) DEFAULT NULL,
 
     total_capital FLOAT DEFAULT 100000,
@@ -76,3 +75,19 @@ CREATE TABLE historical_prices (
     -- Constraints
     UNIQUE KEY unique_ticker_date (ticker, date)
 );
+
+
+CREATE TABLE IF NOT EXISTS otp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp_code VARCHAR(6) NOT NULL,
+    purpose ENUM('registration', 'password_reset') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    INDEX idx_email_purpose (email, purpose),
+    INDEX idx_expires (expires_at)
+);
+
+-- Auto-delete expired OTPs (optional cleanup)
+-- DELETE FROM otp WHERE expires_at < NOW() OR is_used = TRUE;

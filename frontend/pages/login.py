@@ -36,7 +36,13 @@ layout = dbc.Container([
                     
                     # Standard Login Form
                     dbc.Input(id="login-email", type="email", placeholder="Corporate Email", className="mb-3"),
-                    dbc.Input(id="login-password", type="password", placeholder="Password", className="mb-3"),
+                    dbc.Input(id="login-password", type="password", placeholder="Password", className="mb-2"),
+                    
+                    # Forgot Password Link
+                    html.Div([
+                        html.A("Forgot Password?", href="/forgot-password", style={"color": "#388087", "textDecoration": "none", "fontSize": "14px"})
+                    ], className="text-end mb-3"),
+                    
                     dbc.Button("Authenticate", id="btn-login", color="dark", className="w-100 mb-3 btn"),
                     
                     html.Hr(className="my-3"),

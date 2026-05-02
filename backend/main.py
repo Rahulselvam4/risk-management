@@ -12,6 +12,7 @@ from backend.portfolio_engine import PortfolioCalculator
 from backend.auth import create_access_token, get_password_hash, verify_password
 from backend.kafka_producer import trigger_kafka_pipeline
 from backend.alert_worker import start_alert_scheduler
+from backend.otp_service import create_otp, verify_otp, cleanup_expired_otps
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -26,6 +27,7 @@ def startup_event():
     """Start background services on application startup."""
     logger.info("Starting background services...")
     start_alert_scheduler()
+    cleanup_expired_otps()  # Clean up old OTPs on startup
     logger.info("Alert scheduler initialized successfully")
 
 def ensure_risk_column(conn):
@@ -68,20 +70,63 @@ class StandardLoginItem(BaseModel):
     email: str
     password: str
 
-class GoogleLoginItem(BaseModel):
-    email: str
-    google_id: str
-
 class AlertPreferences(BaseModel):
     enabled: bool
+
+class OTPRequest(BaseModel):
+    email: str
+    purpose: str  # 'registration' or 'password_reset'
+
+class OTPVerify(BaseModel):
+    email: str
+    otp_code: str
+    purpose: str
+
+class RegisterWithOTP(BaseModel):
+    email: str
+    password: str
+    otp_code: str
+
+class ResetPassword(BaseModel):
+    email: str
+    otp_code: str
+    new_password: str
 
 
 # --- 1. AUTHENTICATION ENDPOINTS ---
 
+@app.post("/auth/send-otp", tags=["Authentication"])
+def send_otp(item: OTPRequest):
+    """Send OTP to email for registration or password reset."""
+    result = create_otp(item.email, item.purpose)
+    
+    if result["success"]:
+        return {"message": result["message"]}
+    else:
+        raise HTTPException(status_code=400, detail=result["message"])
+
+@app.post("/auth/verify-otp", tags=["Authentication"])
+def verify_otp_endpoint(item: OTPVerify):
+    """Verify OTP code."""
+    result = verify_otp(item.email, item.otp_code, item.purpose)
+    
+    if result["success"]:
+        return {"message": result["message"], "verified": True}
+    else:
+        raise HTTPException(status_code=400, detail=result["message"])
+
 @app.post("/auth/register", tags=["Authentication"])
-def register_user(item: StandardLoginItem):
+def register_user(item: RegisterWithOTP):
+    """Register user with OTP verification."""
+    # First verify OTP
+    otp_result = verify_otp(item.email, item.otp_code, "registration")
+    
+    if not otp_result["success"]:
+        raise HTTPException(status_code=400, detail=otp_result["message"])
+    
     conn = get_db_connection()
-    if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
+    if not conn: 
+        raise HTTPException(status_code=500, detail="Database connection failed")
     cursor = conn.cursor(dictionary=True)
     
     try:
@@ -90,12 +135,58 @@ def register_user(item: StandardLoginItem):
             raise HTTPException(status_code=400, detail="Email already registered")
             
         hashed_pwd = get_password_hash(item.password)
-        cursor.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s)", (item.email, hashed_pwd))
+        cursor.execute(
+            "INSERT INTO users (email, password_hash) VALUES (%s, %s)", 
+            (item.email, hashed_pwd)
+        )
         conn.commit()
+        
+        logger.info(f"User registered successfully: {item.email}")
         return {"message": "User successfully registered"}
+        
     except Exception as e:
         logger.error(f"Registration Error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during registration")
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.post("/auth/reset-password", tags=["Authentication"])
+def reset_password(item: ResetPassword):
+    """Reset password with OTP verification."""
+    # First verify OTP
+    otp_result = verify_otp(item.email, item.otp_code, "password_reset")
+    
+    if not otp_result["success"]:
+        raise HTTPException(status_code=400, detail=otp_result["message"])
+    
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Check if user exists
+        cursor.execute("SELECT id FROM users WHERE email = %s", (item.email,))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update password
+        hashed_pwd = get_password_hash(item.new_password)
+        cursor.execute(
+            "UPDATE users SET password_hash = %s WHERE email = %s",
+            (hashed_pwd, item.email)
+        )
+        conn.commit()
+        
+        logger.info(f"Password reset successfully for: {item.email}")
+        return {"message": "Password reset successfully"}
+        
+    except Exception as e:
+        logger.error(f"Password reset error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
     finally:
         cursor.close()
         conn.close()
@@ -121,32 +212,7 @@ def login_standard(item: StandardLoginItem):
     finally:
         cursor.close()
         conn.close()
-
-@app.post("/auth/login/google", tags=["Authentication"])
-def login_google(item: GoogleLoginItem):
-    conn = get_db_connection()
-    if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
-    cursor = conn.cursor(dictionary=True)
-    
-    try:
-        cursor.execute("SELECT id FROM users WHERE google_id = %s", (item.google_id,))
-        user = cursor.fetchone()
-        
-        if not user:
-            cursor.execute("INSERT INTO users (email, google_id) VALUES (%s, %s)", (item.email, item.google_id))
-            conn.commit()
-            user_id = cursor.lastrowid
-            is_new_user = True
-        else:
-            user_id = user['id']
-            cursor.execute("SELECT COUNT(*) as count FROM portfolios WHERE user_id = %s", (user_id,))
-            is_new_user = cursor.fetchone()['count'] == 0
-            
-        token = create_access_token(data={"sub": item.email, "user_id": user_id})
-        return {"access_token": token, "token_type": "bearer", "user_id": user_id, "is_new_user": is_new_user}
-    finally:
-        cursor.close()
-        conn.close()
+ 
 
 
 # --- 2. PORTFOLIO CRUD OPERATIONS ---
