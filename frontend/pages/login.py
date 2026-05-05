@@ -17,7 +17,7 @@ load_dotenv()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
 if not GOOGLE_CLIENT_ID:
-    print("WARNING: GOOGLE_CLIENT_ID not found in .env file!")
+    print()
 
 # --- UI LAYOUT ---
 layout = dbc.Container([

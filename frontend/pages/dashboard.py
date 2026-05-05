@@ -1,4 +1,3 @@
-
 # frontend/pages/dashboard.py
 import dash
 from dash import dcc, html, Input, Output, State, callback
@@ -29,21 +28,18 @@ INDIAN_ASSETS = [
     {"label": "Bajaj Finserv (BAJAJFINSV.NS)", "value": "BAJAJFINSV.NS"},
     {"label": "HDFC Life Insurance (HDFCLIFE.NS)", "value": "HDFCLIFE.NS"},
     {"label": "SBI Life Insurance (SBILIFE.NS)", "value": "SBILIFE.NS"},
-    
     # IT & Technology
     {"label": "Tata Consultancy Services (TCS.NS)", "value": "TCS.NS"},
     {"label": "Infosys (INFY.NS)", "value": "INFY.NS"},
     {"label": "HCL Technologies (HCLTECH.NS)", "value": "HCLTECH.NS"},
     {"label": "Wipro (WIPRO.NS)", "value": "WIPRO.NS"},
     {"label": "Tech Mahindra (TECHM.NS)", "value": "TECHM.NS"},
-    
     # Energy & Oil
     {"label": "Reliance Industries (RELIANCE.NS)", "value": "RELIANCE.NS"},
     {"label": "ONGC (ONGC.NS)", "value": "ONGC.NS"},
     {"label": "NTPC (NTPC.NS)", "value": "NTPC.NS"},
     {"label": "Power Grid Corporation (POWERGRID.NS)", "value": "POWERGRID.NS"},
     {"label": "Coal India (COALINDIA.NS)", "value": "COALINDIA.NS"},
-    
     # Automobiles
     {"label": "Tata Motors (TATAMOTORS.NS)", "value": "TATAMOTORS.NS"},
     {"label": "Maruti Suzuki (MARUTI.NS)", "value": "MARUTI.NS"},
@@ -51,7 +47,6 @@ INDIAN_ASSETS = [
     {"label": "Bajaj Auto (BAJAJ-AUTO.NS)", "value": "BAJAJ-AUTO.NS"},
     {"label": "Hero MotoCorp (HEROMOTOCO.NS)", "value": "HEROMOTOCO.NS"},
     {"label": "Eicher Motors (EICHERMOT.NS)", "value": "EICHERMOT.NS"},
-    
     # FMCG & Consumer
     {"label": "Hindustan Unilever (HINDUNILVR.NS)", "value": "HINDUNILVR.NS"},
     {"label": "ITC Limited (ITC.NS)", "value": "ITC.NS"},
@@ -59,34 +54,28 @@ INDIAN_ASSETS = [
     {"label": "Britannia Industries (BRITANNIA.NS)", "value": "BRITANNIA.NS"},
     {"label": "Dabur India (DABUR.NS)", "value": "DABUR.NS"},
     {"label": "Godrej Consumer (GODREJCP.NS)", "value": "GODREJCP.NS"},
-    
     # Pharmaceuticals
     {"label": "Sun Pharmaceuticals (SUNPHARMA.NS)", "value": "SUNPHARMA.NS"},
     {"label": "Dr. Reddy's Laboratories (DRREDDY.NS)", "value": "DRREDDY.NS"},
     {"label": "Cipla (CIPLA.NS)", "value": "CIPLA.NS"},
     {"label": "Divi's Laboratories (DIVISLAB.NS)", "value": "DIVISLAB.NS"},
     {"label": "Biocon (BIOCON.NS)", "value": "BIOCON.NS"},
-    
-    # Telecom & Media
+    # Telecom
     {"label": "Bharti Airtel (BHARTIARTL.NS)", "value": "BHARTIARTL.NS"},
-    
     # Metals & Mining
     {"label": "Tata Steel (TATASTEEL.NS)", "value": "TATASTEEL.NS"},
     {"label": "JSW Steel (JSWSTEEL.NS)", "value": "JSWSTEEL.NS"},
     {"label": "Hindalco Industries (HINDALCO.NS)", "value": "HINDALCO.NS"},
     {"label": "Vedanta (VEDL.NS)", "value": "VEDL.NS"},
-    
     # Cement & Construction
     {"label": "Larsen & Toubro (LT.NS)", "value": "LT.NS"},
     {"label": "UltraTech Cement (ULTRACEMCO.NS)", "value": "ULTRACEMCO.NS"},
     {"label": "Grasim Industries (GRASIM.NS)", "value": "GRASIM.NS"},
     {"label": "Ambuja Cements (AMBUJACEM.NS)", "value": "AMBUJACEM.NS"},
-    
-    # Retail & Consumer Durables
+    # Retail & Consumer
     {"label": "Titan Company (TITAN.NS)", "value": "TITAN.NS"},
     {"label": "Asian Paints (ASIANPAINT.NS)", "value": "ASIANPAINT.NS"},
     {"label": "Havells India (HAVELLS.NS)", "value": "HAVELLS.NS"},
-    
     # Diversified
     {"label": "Adani Enterprises (ADANIENT.NS)", "value": "ADANIENT.NS"},
     {"label": "Adani Ports (ADANIPORTS.NS)", "value": "ADANIPORTS.NS"},
@@ -94,171 +83,350 @@ INDIAN_ASSETS = [
     {"label": "IndusInd Bank (INDUSINDBK.NS)", "value": "INDUSINDBK.NS"},
     {"label": "Shree Cement (SHREECEM.NS)", "value": "SHREECEM.NS"},
     {"label": "Bajaj Holdings (BAJAJHLDNG.NS)", "value": "BAJAJHLDNG.NS"},
-    
-    # Commodities - Gold (Multiple Options)
+    # Gold ETFs
     {"label": "Gold - Nippon India ETF (GOLDBEES.NS)", "value": "GOLDBEES.NS"},
     {"label": "Gold - SBI ETF (SETFGOLD.NS)", "value": "SETFGOLD.NS"},
     {"label": "Gold - HDFC Gold ETF (HDFCGOLD.NS)", "value": "HDFCGOLD.NS"},
-    
-    # Commodities - Silver
+    # Silver ETFs
     {"label": "Silver - Nippon India ETF (SILVERBEES.NS)", "value": "SILVERBEES.NS"},
     {"label": "Silver - SBI ETF (SETFSILV.NS)", "value": "SETFSILV.NS"},
-    
     # Debt / Fixed Income
     {"label": "Liquid Fund - Nippon BeES (LIQUIDBEES.NS)", "value": "LIQUIDBEES.NS"},
     {"label": "Govt Bonds - Nippon Gilt ETF (GILTBEES.NS)", "value": "GILTBEES.NS"},
     {"label": "Nifty 50 Index ETF (NIFTYBEES.NS)", "value": "NIFTYBEES.NS"},
 ]
 
-# --- UI LAYOUT ---
+# ─── CHART PLACEHOLDER ────────────────────────────────────────────────────────
+def _chart_placeholder(icon, title, subtitle):
+    """Empty-state card shown before the user clicks PREDICT."""
+    return html.Div(
+        [
+            html.Div(icon, style={
+                "fontSize": "2.8rem",
+                "lineHeight": "1",
+                "marginBottom": "12px",
+                "opacity": "0.55"
+            }),
+            html.P(title, style={
+                "fontWeight": "600",
+                "color": COLORS["dark_gray"],
+                "marginBottom": "4px",
+                "fontSize": "0.95rem"
+            }),
+            html.P(subtitle, style={
+                "color": "#aaa",
+                "fontSize": "0.8rem",
+                "margin": "0"
+            }),
+        ],
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "minHeight": "280px",
+            "padding": "2rem",
+            "textAlign": "center",
+            "background": "repeating-linear-gradient("
+                          "45deg, transparent, transparent 8px, "
+                          "rgba(0,0,0,0.015) 8px, rgba(0,0,0,0.015) 9px)",
+            "borderRadius": "8px",
+        }
+    )
+
+
+# ─── INLINE STYLES ────────────────────────────────────────────────────────────
+KPI_CARD_STYLE = {
+    "borderRadius": "12px",
+    "border": "none",
+    "boxShadow": "0 2px 12px rgba(0,0,0,0.07)",
+    "padding": "20px 24px",
+    "minHeight": "110px",
+    "display": "flex",
+    "flexDirection": "column",
+    "justifyContent": "center",
+}
+
+KPI_LABEL_STYLE = {
+    "fontSize": "0.7rem",
+    "fontWeight": "700",
+    "letterSpacing": "0.08em",
+    "textTransform": "uppercase",
+    "color": "#888",
+    "marginBottom": "6px",
+}
+
+KPI_VALUE_STYLE_GREEN = {
+    "fontSize": "1.9rem",
+    "fontWeight": "700",
+    "color": COLORS["deep_teal"],
+    "lineHeight": "1.15",
+    "whiteSpace": "nowrap",
+}
+
+KPI_VALUE_STYLE_NEUTRAL = {
+    "fontSize": "1.9rem",
+    "fontWeight": "700",
+    "color": COLORS["dark_gray"],
+    "lineHeight": "1.15",
+    "whiteSpace": "nowrap",
+}
+
+KPI_VALUE_STYLE_RED = {
+    "fontSize": "1.9rem",
+    "fontWeight": "700",
+    "color": COLORS["alert_red"],
+    "lineHeight": "1.15",
+    "whiteSpace": "nowrap",
+}
+
+# ─── UI LAYOUT ────────────────────────────────────────────────────────────────
 layout = html.Div([
     get_navbar(),
     dcc.Interval(id="dashboard-poll", interval=3000, n_intervals=0, max_intervals=20),
     dbc.Container([
-        # Header Row
+
+        # ── Header ──────────────────────────────────────────────────────────
         dbc.Row([
             dbc.Col([
                 html.H2("Portfolio Command Center",
-                        style={"color": COLORS["dark_gray"], "fontWeight": "600"}),
+                        style={"color": COLORS["dark_gray"], "fontWeight": "700",
+                               "letterSpacing": "-0.02em"}),
                 html.P("Analyze systemic risk and AI-driven asset forecasts.",
-                       className="text-muted")
-            ], width=8),
+                       className="text-muted mb-0")
+            ], xs=12, md=8),
             dbc.Col([
-                dbc.Button("↻ Rebalance Portfolio", href="/rebalance",
-                           color="primary", className="float-end btn px-4 py-2 mt-2")
-            ], width=4)
-        ], className="mb-4"),
+                dbc.Button(
+                    [html.I(className="bi bi-arrow-repeat me-2"), "Rebalance Portfolio"],
+                    href="/rebalance",
+                    color="primary",
+                    className="float-end px-4 py-2 mt-2",
+                    style={"borderRadius": "8px", "fontWeight": "600"}
+                )
+            ], xs=12, md=4)
+        ], className="mb-4 mt-3"),
 
-        # Loading banner — visible while data is being fetched
+        # ── Loading banner ───────────────────────────────────────────────────
         html.Div(id="dashboard-loading-banner"),
 
-        # Top KPI Cards
-        dcc.Loading(
-            dbc.Row(id="dashboard-kpi-row", className="mb-4"),
-            type="dot", color=COLORS["deep_teal"]
-        ),
+        # ── KPI Cards ───────────────────────────────────────────────────────
+        html.Div(id="dashboard-kpi-row", className="mb-4"),
 
-        # MACRO VIEW: Allocation & Drawdown
-        dcc.Loading(
-          dbc.Row([
-            dbc.Col(dbc.Card(dbc.CardBody([
-                dcc.Graph(id="allocation-pie-chart", config={'displayModeBar': False})
-            ]), className="shadow-sm card"), width=4),
+        # ── Macro Charts ────────────────────────────────────────────────────
+        html.Div(id="dashboard-charts-row", className="mb-5"),
 
-            dbc.Col(dbc.Card(dbc.CardBody([
-                dcc.Graph(id="drawdown-area-chart", config={'displayModeBar': False})
-            ]), className="shadow-sm card"), width=8)
-          ], className="mb-5"),
-          type="circle", color=COLORS["deep_teal"]
-        ),
+        html.Hr(style={"borderColor": COLORS["light_gray"], "opacity": "0.5"}),
 
-        html.Hr(style={"color": COLORS["light_gray"]}),
+        # ── Micro Section Header ─────────────────────────────────────────────
+        html.H3("Micro Asset Intelligence",
+                className="mt-4 mb-1",
+                style={"color": COLORS["dark_gray"], "fontWeight": "700",
+                       "letterSpacing": "-0.02em"}),
+        html.P("Select an asset from your portfolio to get AI-powered technical analysis and risk prediction.",
+               className="text-muted mb-4", style={"fontSize": "0.9rem"}),
 
-        # MICRO VIEW: Deep Dive AI & Moving Averages
-        html.H3("Micro Asset Intelligence", className="mt-5 mb-4",
-                style={"color": COLORS["dark_gray"], "fontWeight": "600"}),
-        
-        # Selector Row: centered smaller selector above the charts
+        # ── Asset Selector ───────────────────────────────────────────────────
         dbc.Row([
             dbc.Col(
-                dbc.Card(dbc.CardBody([
-                    html.Label("Select Your Portfolio Asset:", className="fw-bold text-muted mb-2"),
-                    dcc.Dropdown(
-                        id="ai-ticker-input",
-                        options=[],
-                        placeholder="Select from your portfolio...",
-                        searchable=True,
-                        clearable=True,
-                        className="mb-3"
-                    ),
-                    dbc.Button("PREDICT", id="btn-run-ai",
-                               color="dark", className="w-100 btn")
-                ]), className="shadow-sm card border-0 selector-card"),
-            xs=12
+                dbc.Card(
+                    dbc.CardBody([
+                        html.Label("Select Your Portfolio Asset:",
+                                   className="fw-bold mb-2",
+                                   style={"color": COLORS["dark_gray"], "fontSize": "0.85rem",
+                                          "textTransform": "uppercase", "letterSpacing": "0.06em"}),
+                        dcc.Dropdown(
+                            id="ai-ticker-input",
+                            options=[],
+                            placeholder="Select from your portfolio...",
+                            searchable=True,
+                            clearable=True,
+                            className="mb-3",
+                            style={"fontSize": "0.9rem"}
+                        ),
+                        dbc.Button(
+                            [html.I(className="bi bi-cpu me-2"), "PREDICT"],
+                            id="btn-run-ai",
+                            color="dark",
+                            className="w-100",
+                            style={"borderRadius": "6px", "fontWeight": "700",
+                                   "letterSpacing": "0.08em", "padding": "10px"}
+                        )
+                    ]),
+                    className="border-0 shadow-sm",
+                    style={"borderRadius": "12px"}
+                ),
+                xs=12, sm=10, md=8, lg=6,
+                className="mx-auto"
             )
         ], className="mb-4"),
 
-        # Charts Row: two technical graphs below the selector (equal width)
+        # ── Technical + SHAP Charts ──────────────────────────────────────────
         dbc.Row([
-            dbc.Col(dbc.Card(dbc.CardBody([
-                dcc.Loading(
-                    dcc.Graph(id="ma-price-chart", config={'displayModeBar': False}),
-                    type="circle", color=COLORS["deep_teal"]
-                )
-            ]), className="shadow-sm card border-0 chart-card"), xs=12, md=6),
-
-            dbc.Col(dbc.Card(dbc.CardBody([
-                dcc.Loading(
-                    dcc.Graph(id="shap-waterfall-chart", config={'displayModeBar': False}),
-                    type="circle", color=COLORS["alert_red"]
-                )
-            ]), className="shadow-sm card border-0 chart-card"), xs=12, md=6)
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        dcc.Loading(
+                            html.Div(
+                                id="ma-price-chart-container",
+                                children=_chart_placeholder(
+                                    "📈",
+                                    "Price & Moving Averages",
+                                    "Select an asset and click PREDICT to load the technical chart"
+                                )
+                            ),
+                            type="circle",
+                            color=COLORS["deep_teal"]
+                        )
+                    ),
+                    className="border-0 shadow-sm h-100",
+                    style={"borderRadius": "12px"}
+                ),
+                xs=12, md=6,
+                className="mb-3 mb-md-0"
+            ),
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        dcc.Loading(
+                            html.Div(
+                                id="shap-waterfall-chart-container",
+                                children=_chart_placeholder(
+                                    "🧩",
+                                    "AI Risk Explanation",
+                                    "The SHAP waterfall chart will appear here after prediction"
+                                )
+                            ),
+                            type="circle",
+                            color=COLORS["alert_red"]
+                        )
+                    ),
+                    className="border-0 shadow-sm h-100",
+                    style={"borderRadius": "12px"}
+                ),
+                xs=12, md=6
+            )
         ], className="mb-4"),
-        
-        # NEW: Model Confidence Card
-        dbc.Row([
-            dbc.Col(dbc.Card([
-                dbc.CardHeader([html.I(className="bi bi-shield-check me-2"), "Model Confidence Metrics"],
-                               style={"backgroundColor": COLORS["deep_teal"], "color": "white", "fontWeight": "bold"}),
-                dbc.CardBody(id="model-confidence-display")
-            ], className="shadow-sm border-0"), width=12)
-        ], className="mb-4"),
 
-        # --- THE EXPLANATION BOX ---
+        # ── Explanation Box ──────────────────────────────────────────────────
         dbc.Row([
-            dbc.Col(dbc.Card([
-                dbc.CardHeader([html.I(className="bi bi-info-circle me-2"), "How to Read the AI Analysis (Plain English)"], 
-                               style={"backgroundColor": COLORS["muted_aqua"], "color": "white", "fontWeight": "bold"}),
-                dbc.CardBody([
-                    dbc.Row([
-                        dbc.Col([
-                            html.H5("📈 The Technical Chart (Left)", style={"color": COLORS["dark_gray"]}),
-                            html.P("This graph shows recent price movements. The bars (candlesticks) show daily trading: Green means the price went up, Red means it went down. The Teal Line is the short-term average price, and the Red Dotted Line is the long-term average. If the short-term line drops below the long-term line, it indicates the stock is losing momentum.", className="text-muted small")
-                        ], width=4),
-                        dbc.Col([
-                            html.H5("🧩 The AI Explanation (Right)", style={"color": COLORS["dark_gray"]}),
-                            html.P("This 'waterfall' diagram is the AI explaining its math. Each red block is a clue (like high volatility or a bad P/E ratio) that increases the risk of a crash. The blocks stack diagonally to show you exactly how the AI arrived at its final risk percentage.", className="text-muted small")
-                        ], width=4),
-                        dbc.Col([
-                            html.H5("⚖️ The Verdict & Risk", style={"color": COLORS["dark_gray"]}),
-                            html.P([
-                                html.Strong("What is the risk? "), "The AI predicts the probability that this stock will drop by ", html.Strong("more than your custom risk threshold tomorrow."), html.Br(),
-                                html.Strong("Should I hold? "), "If the AI says ", html.Span("HOLD", style={"color": COLORS["deep_teal"], "fontWeight": "bold"}), ", it means a crash hitting your threshold is unlikely. If it says ", html.Span("SELL", style={"color": COLORS["alert_red"], "fontWeight": "bold"}), ", the AI detects a high probability of a severe drop, and you should reconsider your position."
-                            ], className="text-muted small")
-                        ], width=4),
+            dbc.Col(
+                dbc.Card([
+                    dbc.CardHeader(
+                        [html.I(className="bi bi-info-circle me-2"),
+                         "How to Read the AI Analysis"],
+                        style={"backgroundColor": COLORS["muted_aqua"],
+                               "color": "white", "fontWeight": "bold",
+                               "borderRadius": "12px 12px 0 0"}
+                    ),
+                    dbc.CardBody([
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div([
+                                    html.Span("📈", style={"fontSize": "1.4rem"}),
+                                    html.H6("The Technical Chart (Left)",
+                                            className="d-inline ms-2 align-middle",
+                                            style={"color": COLORS["dark_gray"]})
+                                ], className="mb-2"),
+                                html.P(
+                                    "This graph shows recent price movements. Green candlesticks mean "
+                                    "the price went up; red means it went down. The teal line is the "
+                                    "short-term average and the red dotted line is the long-term average. "
+                                    "When the short-term line falls below the long-term line, momentum is fading.",
+                                    className="text-muted small mb-0"
+                                )
+                            ], xs=12, md=4, className="mb-3 mb-md-0"),
+                            dbc.Col([
+                                html.Div([
+                                    html.Span("🧩", style={"fontSize": "1.4rem"}),
+                                    html.H6("The AI Explanation (Right)",
+                                            className="d-inline ms-2 align-middle",
+                                            style={"color": COLORS["dark_gray"]})
+                                ], className="mb-2"),
+                                html.P(
+                                    "This waterfall diagram is the AI explaining its reasoning. Each red "
+                                    "block (e.g. high volatility, bad P/E ratio) increases the predicted "
+                                    "crash risk. The blocks stack to show exactly how the AI reached its "
+                                    "final risk percentage.",
+                                    className="text-muted small mb-0"
+                                )
+                            ], xs=12, md=4, className="mb-3 mb-md-0"),
+                            dbc.Col([
+                                html.Div([
+                                    html.Span("⚖️", style={"fontSize": "1.4rem"}),
+                                    html.H6("The Verdict & Risk",
+                                            className="d-inline ms-2 align-middle",
+                                            style={"color": COLORS["dark_gray"]})
+                                ], className="mb-2"),
+                                html.P([
+                                    html.Strong("Risk: "),
+                                    "Probability the stock drops beyond your custom threshold tomorrow. ",
+                                    html.Strong("HOLD "),
+                                    html.Span("(teal)", style={"color": COLORS["deep_teal"]}),
+                                    " = crash unlikely. ",
+                                    html.Strong("SELL "),
+                                    html.Span("(red)", style={"color": COLORS["alert_red"]}),
+                                    " = high probability of a severe drop — reconsider your position."
+                                ], className="text-muted small mb-0")
+                            ], xs=12, md=4),
+                        ])
                     ])
-                ])
-            ], className="shadow-sm border-0 mb-5"))
+                ],
+                className="border-0 shadow-sm mb-5",
+                style={"borderRadius": "12px"}
+                )
+            )
         ])
 
     ], fluid=True, style={"maxWidth": "1400px"})
 ], style={"backgroundColor": COLORS["off_white"], "minHeight": "100vh"})
 
 
-# --- LOGIC: MACRO DIAGNOSTICS ---
+# ─── HELPERS ──────────────────────────────────────────────────────────────────
 def _loading_banner(message="Building your portfolio dashboard, please wait..."):
     return dbc.Alert(
         [dbc.Spinner(size="sm", color="light", spinner_class_name="me-2"), message],
-        color="info", className="d-flex align-items-center py-2"
+        color="info",
+        className="d-flex align-items-center py-2",
+        style={"borderRadius": "8px"}
     )
 
 
+def _build_kpi_card(label, value, value_style):
+    """Compact, single-line KPI card."""
+    return dbc.Card(
+        dbc.CardBody([
+            html.P(label, style=KPI_LABEL_STYLE),
+            html.P(value, style=value_style),
+        ]),
+        style=KPI_CARD_STYLE,
+        className="h-100"
+    )
+
+
+# ─── CALLBACK: MACRO DASHBOARD ────────────────────────────────────────────────
 @callback(
-    Output("dashboard-kpi-row",        "children"),
-    Output("allocation-pie-chart",     "figure"),
-    Output("drawdown-area-chart",      "figure"),
-    Output("dashboard-poll",           "disabled"),
+    Output("dashboard-kpi-row", "children"),
+    Output("dashboard-charts-row", "children"),
+    Output("dashboard-poll", "disabled"),
     Output("dashboard-loading-banner", "children"),
-    Output("ai-ticker-input",          "options"),
-    Input("session-store",             "data"),
-    Input("dashboard-poll",            "n_intervals")
+    Output("ai-ticker-input", "options"),
+    Input("session-store", "data"),
+    Input("dashboard-poll", "n_intervals")
 )
 def load_macro_dashboard(session, n_intervals):
-    empty_figs = (go.Figure().update_layout(get_base_layout("Waiting for data...")),
-                  go.Figure().update_layout(get_base_layout("Waiting for data...")))
-
     if not session or not session.get('user_id'):
-        return [], *empty_figs, True, None, []
+        return (
+            None,
+            dbc.Row([
+                dbc.Col(html.Div([
+                    html.I(className="bi bi-graph-up",
+                           style={"fontSize": "4rem", "color": "#ccc"}),
+                    html.P("Please log in to view your portfolio",
+                           className="text-muted mt-3")
+                ], className="text-center py-5"), width=12)
+            ]),
+            True, None, []
+        )
 
     user_id = session['user_id']
 
@@ -267,15 +435,29 @@ def load_macro_dashboard(session, n_intervals):
         assets   = port_res.json().get("assets", [])
 
         if not assets:
-            return [], *empty_figs, False, _loading_banner(), []
+            return (
+                None,
+                dbc.Row([
+                    dbc.Col(html.Div([
+                        dbc.Spinner(color="primary", size="lg"),
+                        html.P("Loading your portfolio...", className="text-muted mt-3")
+                    ], className="text-center py-5"), width=12)
+                ]),
+                False,
+                _loading_banner("Setting up your portfolio..."),
+                []
+            )
 
-        # Build dropdown options from user's portfolio
-        portfolio_options = [{"label": f"{asset['ticker']}", "value": asset['ticker']} for asset in assets]
+        portfolio_options = [
+            {"label": asset['ticker'], "value": asset['ticker']} for asset in assets
+        ]
 
         pie_fig = px.pie(
             assets, names='ticker', values='weight', hole=0.45,
             title="Asset Allocation",
-            color_discrete_sequence=[COLORS['deep_teal'], COLORS['muted_aqua'], COLORS['dark_gray']]
+            color_discrete_sequence=[
+                COLORS['deep_teal'], COLORS['muted_aqua'], COLORS['dark_gray']
+            ]
         )
         pie_fig.update_layout(get_base_layout("Asset Allocation"))
 
@@ -283,11 +465,24 @@ def load_macro_dashboard(session, n_intervals):
         if diag_res.status_code == 200:
             data = diag_res.json()
 
-            kpis = [
-                create_kpi_card("Total Returns (3yrs)", f"{data['total_return']}%"),
-                create_kpi_card("Value at Risk (95%)",     f"₹{data['var_95']:,.2f}"),
-                create_kpi_card("Maximum Drawdown",        f"{data['current_drawdown']}%", is_alert=True)
-            ]
+            # ── KPI Row ──────────────────────────────────────────────────────
+            kpis = dbc.Row([
+                dbc.Col(_build_kpi_card(
+                    "TOTAL RETURNS (3YRS)",
+                    f"{data['total_return']}%",
+                    KPI_VALUE_STYLE_GREEN
+                ), xs=12, sm=4, className="mb-3 mb-sm-0"),
+                dbc.Col(_build_kpi_card(
+                    "VALUE AT RISK (95%)",
+                    f"₹{data['var_95']:,.2f}",
+                    KPI_VALUE_STYLE_NEUTRAL
+                ), xs=12, sm=4, className="mb-3 mb-sm-0"),
+                dbc.Col(_build_kpi_card(
+                    "MAXIMUM DRAWDOWN",
+                    f"{data['current_drawdown']}%",
+                    KPI_VALUE_STYLE_RED
+                ), xs=12, sm=4),
+            ], className="g-3")
 
             draw_fig = go.Figure()
             draw_fig.add_trace(go.Scatter(
@@ -299,32 +494,88 @@ def load_macro_dashboard(session, n_intervals):
             draw_fig.update_layout(get_base_layout("Systemic Portfolio Drawdown"))
             draw_fig.update_yaxes(tickformat=".1%")
 
-            return kpis, pie_fig, draw_fig, True, None, portfolio_options  # data ready — stop polling
+            charts = dbc.Row([
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(dcc.Graph(figure=pie_fig, config={'displayModeBar': False})),
+                        className="border-0 shadow-sm",
+                        style={"borderRadius": "12px"}
+                    ),
+                    xs=12, md=4, className="mb-3 mb-md-0"
+                ),
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(dcc.Graph(figure=draw_fig, config={'displayModeBar': False})),
+                        className="border-0 shadow-sm",
+                        style={"borderRadius": "12px"}
+                    ),
+                    xs=12, md=8
+                ),
+            ], className="g-3")
 
-        # assets exist but diagnostics not ready yet
-        return [], pie_fig, empty_figs[1], False, _loading_banner("Crunching portfolio diagnostics..."), portfolio_options
+            return kpis, charts, True, None, portfolio_options
+
+        # assets exist but diagnostics not ready
+        charts = dbc.Row([
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(dcc.Graph(figure=pie_fig, config={'displayModeBar': False})),
+                    className="border-0 shadow-sm",
+                    style={"borderRadius": "12px"}
+                ),
+                xs=12, md=4, className="mb-3 mb-md-0"
+            ),
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(html.Div([
+                        dbc.Spinner(color="primary", size="lg"),
+                        html.P("Calculating portfolio metrics...", className="text-muted mt-3")
+                    ], className="text-center py-5")),
+                    className="border-0 shadow-sm",
+                    style={"borderRadius": "12px"}
+                ),
+                xs=12, md=8
+            ),
+        ], className="g-3")
+
+        return None, charts, False, _loading_banner("Crunching portfolio diagnostics..."), portfolio_options
 
     except Exception as e:
         print(f"Dashboard load error: {e}")
 
-    return [], *empty_figs, False, _loading_banner(), []  # keep polling on error
+    return (
+        None,
+        dbc.Row([
+            dbc.Col(html.Div([
+                dbc.Spinner(color="primary", size="lg"),
+                html.P("Loading portfolio data...", className="text-muted mt-3")
+            ], className="text-center py-5"), width=12)
+        ]),
+        False,
+        _loading_banner(),
+        []
+    )
 
 
-# --- LOGIC: MICRO EXPLAINABLE AI ---
+# ─── CALLBACK: MICRO AI ────────────────────────────────────────────────────────
 @callback(
-    Output("ma-price-chart",      "figure"),
-    Output("shap-waterfall-chart","figure"),
-    Output("model-confidence-display", "children"),
-    Input("btn-run-ai",           "n_clicks"),
-    State("ai-ticker-input",      "value"),
-    State("session-store",        "data"),
+    Output("ma-price-chart-container", "children"),
+    Output("shap-waterfall-chart-container", "children"),
+    Input("btn-run-ai", "n_clicks"),
+    State("ai-ticker-input", "value"),
+    State("session-store", "data"),
     prevent_initial_call=True
 )
 def run_micro_ai(n_clicks, ticker, session):
     if not ticker or not session or not session.get('user_id'):
-        return go.Figure(), go.Figure(), html.P("No prediction run yet.", className="text-muted")
+        return (
+            _chart_placeholder("📈", "Price & Moving Averages",
+                                "Select an asset and click PREDICT"),
+            _chart_placeholder("🧩", "AI Risk Explanation",
+                                "The SHAP waterfall chart will appear here")
+        )
 
-    ticker = ticker.upper()
+    ticker  = ticker.upper()
     user_id = session['user_id']
 
     # 1. Technical Chart
@@ -361,7 +612,8 @@ def run_micro_ai(n_clicks, ticker, session):
             ma_fig.update_layout(get_base_layout(f"{ticker} Technicals"))
             ma_fig.update_layout(
                 xaxis_rangeslider_visible=False,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                            xanchor="right", x=1)
             )
         else:
             ma_fig = go.Figure().update_layout(get_base_layout("No Price Data"))
@@ -369,78 +621,65 @@ def run_micro_ai(n_clicks, ticker, session):
     except Exception:
         ma_fig = go.Figure().update_layout(get_base_layout("Error Fetching Chart Data"))
 
-    # 2. Backend ML Prediction + Model Confidence
+    # 2. Backend ML Prediction + Confidence
     try:
         res = requests.get(f"{API_URL}/predict/{user_id}/{ticker}")
         if res.status_code == 200:
-            data      = res.json()
-            shap_data = data.get("shap_breakdown", [])
+            data       = res.json()
+            shap_data  = data.get("shap_breakdown", [])
             confidence = data.get("model_confidence", {})
+            risk_prob  = data.get('risk_probability', 0)
 
-            features = [item['feature']           for item in shap_data]
-            impacts  = [item['impact_percentage']  for item in shap_data]
+            features = [item['feature'] for item in shap_data]
+            impacts  = [item['impact_percentage'] for item in shap_data]
+
+            # Convert impact_percentage to percentage of total risk
+            # Backend sends scaled values, we need to show them as % of total risk
+            total_impact = sum(impacts)
+            if total_impact > 0:
+                impact_percentages = [(imp / total_impact) * risk_prob for imp in impacts]
+            else:
+                impact_percentages = impacts
 
             shap_fig = go.Figure(go.Waterfall(
                 orientation="h",
                 measure=["relative"] * len(features),
                 y=features,
-                x=impacts,
+                x=impact_percentages,
                 connector={"line": {"color": COLORS["light_gray"]}},
                 decreasing={"marker": {"color": COLORS["muted_aqua"]}},
-                increasing={"marker": {"color": COLORS["alert_red"]}}
+                increasing={"marker": {"color": COLORS["alert_red"]}},
+                textposition="outside",
+                text=[f"{val:.1f}%" for val in impact_percentages]
             ))
 
-            rec_text = data.get('recommendation', 'HOLD')
+            rec_text  = data.get('recommendation', 'HOLD')
             threshold = data.get('target_threshold', 1.5)
-            
+
             shap_fig.update_layout(
-                get_base_layout(f"AI Decision: {rec_text} ({data['risk_probability']}% chance of a >{threshold}% drop)")
+                get_base_layout(
+                    f"AI Decision: {rec_text} ({risk_prob}% chance of a >{threshold}% drop)"
+                )
             )
-            
-            # Build confidence display
-            if confidence:
-                trust_score = confidence.get('trust_score', 'UNKNOWN')
-                trust_colors = {"HIGH": "success", "MEDIUM": "warning", "LOW": "danger"}
-                trust_icons = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}
-                
-                confidence_ui = dbc.Row([
-                    dbc.Col([
-                        html.H4([trust_icons.get(trust_score, "⚪"), f" {trust_score} CONFIDENCE"], 
-                                className=f"text-{trust_colors.get(trust_score, 'secondary')}"),
-                        html.P(confidence.get('explanation', ''), className="text-muted small")
-                    ], width=12, className="mb-3"),
-                    
-                    dbc.Col([
-                        html.Strong("Recall (Crash Detection):"),
-                        html.P(f"{confidence.get('recall', 0):.1f}%", className="mb-0 text-success" if confidence.get('recall', 0) >= 65 else "mb-0")
-                    ], width=3),
-                    dbc.Col([
-                        html.Strong("Precision (Accuracy):"),
-                        html.P(f"{confidence.get('precision', 0):.1f}%", className="mb-0")
-                    ], width=3),
-                    dbc.Col([
-                        html.Strong("F2-Score:"),
-                        html.P(f"{confidence.get('f2_score', 0):.1f}%", className="mb-0")
-                    ], width=3),
-                    dbc.Col([
-                        html.Strong("ROC-AUC:"),
-                        html.P(f"{confidence.get('roc_auc', 0):.2f}", className="mb-0")
-                    ], width=3),
-                    
-                    dbc.Col([
-                        html.Hr(className="my-3"),
-                        html.Small([
-                            html.Strong("Validated on: "),
-                            f"{confidence.get('validation_days', 0)} days of hidden test data"
-                        ], className="text-muted")
-                    ], width=12)
-                ])
-            else:
-                confidence_ui = html.P("Model confidence metrics not available.", className="text-muted")
-            
-            return ma_fig, shap_fig, confidence_ui
+            shap_fig.update_xaxes(
+                title="Contribution to Risk (%)",
+                tickformat=".1f",
+                ticksuffix="%",
+                showgrid=True,
+                gridcolor="#e5e5e5"
+            )
+            shap_fig.update_yaxes(showgrid=True, gridcolor="#e5e5e5")
+
+            return (
+                dcc.Graph(figure=ma_fig,   config={'displayModeBar': False}),
+                dcc.Graph(figure=shap_fig, config={'displayModeBar': False})
+            )
 
     except Exception as e:
         print(f"Prediction error: {e}")
 
-    return ma_fig, go.Figure().update_layout(get_base_layout("AI Request Failed")), html.P("Prediction failed.", className="text-danger")
+    return (
+        dcc.Graph(figure=ma_fig, config={'displayModeBar': False}),
+        html.Div(html.P("AI prediction failed. Please try again.",
+                        className="text-center text-danger py-5"))
+    )

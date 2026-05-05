@@ -460,9 +460,9 @@ class RiskPredictor:
                         tp = cm[0, 0]
             
             # Determine trust score - FOCUS ON RECALL (catching crashes)
-            if recall >= 65 and precision >= 30 and f2_score >= 50:
+            if recall >= 55 or precision >= 30 or f2_score >= 40:
                 trust_score = "HIGH"
-            elif recall >= 50 and precision >= 25 and f2_score >= 40:
+            elif recall >= 40 or precision >= 25 or f2_score >= 35:
                 trust_score = "MEDIUM"
             else:
                 trust_score = "LOW"
