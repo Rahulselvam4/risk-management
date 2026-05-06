@@ -2,6 +2,7 @@
 import dash
 from dash import html, dcc, Input, Output, callback
 import dash_bootstrap_components as dbc
+from components.chat_widget import create_chat_widget
 
 app = dash.Dash(
     __name__, 
@@ -18,7 +19,8 @@ app.layout = html.Div([
     dcc.Location(id="url", refresh=False),
     dcc.Store(id='session-store', storage_type='session', data={"user_id": None, "token": None}),
     dcc.Location(id="auth-redirect", refresh=True),
-    dash.page_container 
+    dash.page_container,
+    create_chat_widget()  # Add chat widget globally
 ])
 
 @callback(

@@ -8,7 +8,7 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score, confusion_matrix
 from sklearn.feature_selection import SelectKBest, f_classif
 from imblearn.over_sampling import SMOTE, BorderlineSMOTE
-from backend.risk_engine import RiskCalculator
+from risk_engine import RiskCalculator
 import warnings
 
 warnings.filterwarnings('ignore')

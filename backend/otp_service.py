@@ -2,8 +2,8 @@
 import random
 import logging
 from datetime import datetime, timedelta
-from backend.database import get_db_connection
-from backend.email_service import send_otp_email
+from database import get_db_connection
+from email_service import send_otp_email
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("OTPService")

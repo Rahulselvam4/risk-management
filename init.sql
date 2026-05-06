@@ -1,8 +1,8 @@
 -- =========================================
 -- DATABASE SETUP
 -- =========================================
-CREATE DATABASE IF NOT EXISTS risk_management;
-USE risk_management;
+CREATE DATABASE IF NOT EXISTS risk_dashboard_db;
+USE risk_dashboard_db;
 
 -- =========================================
 -- 1. USERS TABLE (Auth + Alerts + Capital)

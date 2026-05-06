@@ -1,6 +1,6 @@
 # frontend/pages/profile.py
 import dash
-from dash import dcc, html, Input, Output, callback, State
+from dash import dcc, html, Input, Output, callback, State, no_update
 import dash_bootstrap_components as dbc
 import requests
 import os
@@ -55,7 +55,8 @@ layout = html.Div([
         
         # Invisible component to handle the redirect after logout
         dcc.Location(id="logout-redirect", refresh=True),
-        dcc.Interval(id="profile-load-interval", interval=500, n_intervals=0, max_intervals=1)
+        dcc.Interval(id="profile-load-interval", interval=500, n_intervals=0, max_intervals=1),
+        dcc.Store(id="alert-preferences-loaded", data=False)
         
     ], fluid=True)
 ], style={"backgroundColor": COLORS["off_white"], "minHeight": "100vh"})
@@ -77,13 +78,14 @@ def load_profile(session):
 @callback(
     Output("alert-toggle", "value"),
     Output("alert-status-display", "children"),
+    Output("alert-preferences-loaded", "data"),
     Input("profile-load-interval", "n_intervals"),
     State("session-store", "data")
 )
 def load_alert_preferences(n_intervals, session):
     """Load user's current alert preferences from backend."""
     if not session or not session.get('user_id'):
-        return False, html.P("Please log in to manage alerts", className="text-muted small")
+        return False, html.P("Please log in to manage alerts", className="text-muted small"), False
     
     user_id = session['user_id']
     
@@ -111,18 +113,18 @@ def load_alert_preferences(n_intervals, session):
                 ], className="mb-0 small text-muted")
             ])
             
-            return enabled, status_display
+            return enabled, status_display, True
         elif response.status_code == 404:
-            return False, html.P("User not found", className="text-danger small")
+            return False, html.P("User not found", className="text-danger small"), True
         else:
-            return False, html.P(f"Server error: {response.status_code}", className="text-danger small")
+            return False, html.P(f"Server error: {response.status_code}", className="text-danger small"), True
             
     except requests.exceptions.ConnectionError:
-        return False, html.P("Cannot connect to server. Is backend running?", className="text-danger small")
+        return False, html.P("Cannot connect to server. Is backend running?", className="text-danger small"), True
     except requests.exceptions.Timeout:
-        return False, html.P("Request timeout. Try again.", className="text-danger small")
+        return False, html.P("Request timeout. Try again.", className="text-danger small"), True
     except Exception as e:
-        return False, html.P(f"Error: {str(e)}", className="text-danger small")
+        return False, html.P(f"Error: {str(e)}", className="text-danger small"), True
 
 
 # --- LOGIC 3: Update Alert Preferences ---
@@ -130,10 +132,15 @@ def load_alert_preferences(n_intervals, session):
     Output("alert-status-display", "children", allow_duplicate=True),
     Input("alert-toggle", "value"),
     State("session-store", "data"),
+    State("alert-preferences-loaded", "data"),
     prevent_initial_call=True
 )
-def update_alert_preferences(enabled, session):
+def update_alert_preferences(enabled, session, preferences_loaded):
     """Update user's alert preferences when toggle is switched."""
+    # Don't update if preferences haven't been loaded yet (prevents initial load trigger)
+    if not preferences_loaded:
+        return no_update
+        
     if not session or not session.get('user_id'):
         return html.P("Session expired", className="text-danger small")
     
@@ -185,4 +192,4 @@ def handle_logout(n_clicks):
         wiped_session = {"user_id": None, "token": None}
         return wiped_session, "/login"
         
-    return dash.no_update, dash.no_update
+    return no_update, no_update

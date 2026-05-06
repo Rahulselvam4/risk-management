@@ -1,4 +1,8 @@
 # backend/main.py
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import logging
 import re
 from typing import List
@@ -6,13 +10,14 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from backend.database import get_db_connection
-from backend.ml_model import RiskPredictor, MultiThresholdPredictor
-from backend.portfolio_engine import PortfolioCalculator
-from backend.auth import create_access_token, get_password_hash, verify_password
-from backend.kafka_producer import trigger_kafka_pipeline
-from backend.alert_worker import start_alert_scheduler
-from backend.otp_service import create_otp, verify_otp, cleanup_expired_otps
+from database import get_db_connection
+from ml_model import RiskPredictor, MultiThresholdPredictor
+from portfolio_engine import PortfolioCalculator
+from auth import create_access_token, get_password_hash, verify_password
+from kafka_producer import trigger_kafka_pipeline
+from alert_worker import start_alert_scheduler
+from otp_service import create_otp, verify_otp, cleanup_expired_otps
+from chatbot import ChatbotService
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -91,6 +96,10 @@ class ResetPassword(BaseModel):
     email: str
     otp_code: str
     new_password: str
+
+class ChatMessage(BaseModel):
+    message: str
+    conversation_history: List[dict] = []
 
 
 # --- 1. AUTHENTICATION ENDPOINTS ---
@@ -451,8 +460,15 @@ def get_alert_preferences(user_id: int):
         if not result:
             raise HTTPException(status_code=404, detail="User not found")
         
+        # Properly handle boolean conversion - MySQL returns 0/1 for BOOLEAN
+        email_enabled = result.get('email_alerts_enabled')
+        if email_enabled is None:
+            email_enabled = False
+        else:
+            email_enabled = bool(email_enabled)
+        
         return {
-            "enabled": bool(result.get('email_alerts_enabled', False)),
+            "enabled": email_enabled,
             "threshold": result.get('alert_threshold', 50),
             "last_alert_sent": result.get('last_alert_sent')
         }
@@ -465,22 +481,29 @@ def update_alert_preferences(user_id: int, preferences: AlertPreferences):
     """Update user's email alert preferences."""
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Database connection failed")
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     
     try:
+        # First check if user exists
+        cursor.execute("SELECT id FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update the preferences
         cursor.execute(
             "UPDATE users SET email_alerts_enabled = %s WHERE id = %s",
             (preferences.enabled, user_id)
         )
         conn.commit()
         
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="User not found")
-        
         status = "enabled" if preferences.enabled else "disabled"
         logger.info(f"Email alerts {status} for user {user_id}")
         
         return {"message": f"Email alerts successfully {status}", "enabled": preferences.enabled}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error updating alert preferences for user {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update alert preferences")
@@ -503,3 +526,28 @@ def get_available_tickers():
     finally:
         cursor.close()
         conn.close()
+
+
+# --- 7. CHATBOT ENDPOINT ---
+
+@app.post("/chat/{user_id}", tags=["Chatbot"])
+def chat_with_assistant(user_id: int, chat_request: ChatMessage):
+    """Chat with AI assistant about portfolio and risk management."""
+    try:
+        chatbot = ChatbotService()
+        result = chatbot.chat(
+            user_id=user_id,
+            message=chat_request.message,
+            conversation_history=chat_request.conversation_history
+        )
+        
+        if result.get("error"):
+            logger.error(f"Chatbot error for user {user_id}: {result['error']}")
+        
+        return {
+            "response": result["response"],
+            "user_id": user_id
+        }
+    except Exception as e:
+        logger.error(f"Chat endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process chat request")

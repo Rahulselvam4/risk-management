@@ -4,9 +4,9 @@ import logging
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from backend.database import get_db_connection
-from backend.ml_model import MultiThresholdPredictor
-from backend.email_service import send_digest_email
+from database import get_db_connection
+from ml_model import MultiThresholdPredictor
+from email_service import send_digest_email
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("AlertWorker")
