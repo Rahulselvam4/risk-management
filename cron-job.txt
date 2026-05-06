@@ -1,0 +1,141 @@
+
+2026-05-05 17:00:00,015 - AlertWorker - INFO - ============================================================
+2026-05-05 17:00:00,015 - AlertWorker - INFO - Daily risk scan started
+2026-05-05 17:00:00,015 - AlertWorker - INFO - ============================================================
+2026-05-05 17:00:00,034 - AlertWorker - INFO - Found 3 users with alerts enabled
+2026-05-05 17:00:00,034 - AlertWorker - INFO - Scanning portfolio for user 5 (rahulselvam4823@gmail.com)
+2026-05-05 17:00:00,041 - MLEngine - INFO - Multi-threshold ensemble: Using 2 models with thresholds [1.2, 3.0] and weights [0.7, 0.3]
+2026-05-05 17:00:00,127 - MLEngine - INFO - Initiating ML Training & Prediction for KOTAKBANK.NS using 1.2% threshold...
+2026-05-05 17:00:00,291 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:00,291 - MLEngine - INFO - Before SMOTE: 980 safe days, 164 crash days (14.3% crashes)
+2026-05-05 17:00:00,291 - MLEngine - INFO - After BorderlineSMOTE: 1470 samples (balanced)
+2026-05-05 17:00:00,315 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'MACD', 'Volume_Change', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'PE_Ratio', 'BB_Width', 'Stochastic', 'OBV', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration']
+2026-05-05 17:00:01,479 - MLEngine - INFO - Ensemble model trained on 1470 samples
+2026-05-05 17:00:01,567 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.561, optimized for recall)
+2026-05-05 17:00:01,590 - MLEngine - INFO - Validation: Accuracy=40.7%, Precision=27.9%, Recall=75.0%, F2=56.1%, ROC-AUC=0.50, Trust=HIGH
+2026-05-05 17:00:01,714 - MLEngine - INFO - Initiating ML Training & Prediction for KOTAKBANK.NS using 3.0% threshold...
+2026-05-05 17:00:01,864 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:01,864 - MLEngine - INFO - Before SMOTE: 1116 safe days, 28 crash days (2.4% crashes)
+2026-05-05 17:00:01,890 - MLEngine - INFO - After BorderlineSMOTE: 1674 samples (balanced)
+2026-05-05 17:00:01,899 - MLEngine - INFO - Selected 15 best features: ['SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'MACD', 'Volume_Change', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'BB_Width', 'Stochastic', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration', 'Volatility_Ratio']
+2026-05-05 17:00:02,735 - MLEngine - INFO - Ensemble model trained on 1674 samples
+2026-05-05 17:00:02,919 - MLEngine - INFO - Optimal threshold: 0.25 (F2=0.000, optimized for recall)
+2026-05-05 17:00:02,934 - MLEngine - INFO - Validation: Accuracy=83.1%, Precision=0.0%, Recall=0.0%, F2=0.0%, ROC-AUC=0.07, Trust=LOW
+2026-05-05 17:00:02,952 - MLEngine - INFO - Multi-threshold ensemble: Using 2 models with thresholds [1.2, 3.0] and weights [0.7, 0.3]
+2026-05-05 17:00:03,050 - MLEngine - INFO - Initiating ML Training & Prediction for ONGC.NS using 1.2% threshold...
+2026-05-05 17:00:03,221 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:03,222 - MLEngine - INFO - Before SMOTE: 919 safe days, 225 crash days (19.7% crashes)
+2026-05-05 17:00:03,251 - MLEngine - INFO - After BorderlineSMOTE: 1378 samples (balanced)
+2026-05-05 17:00:03,251 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'RSI_14', 'MACD', 'Volume_Change', 'ATR_14', 'Price_to_52w_High', 'PE_Ratio', 'Beta', 'BB_Width', 'Stochastic', 'ROC_12', 'ADX_14', 'Price_Acceleration']
+2026-05-05 17:00:04,422 - MLEngine - INFO - Ensemble model trained on 1378 samples
+2026-05-05 17:00:04,602 - MLEngine - INFO - Optimal threshold: 0.25 (F2=0.000, optimized for recall)
+2026-05-05 17:00:04,620 - MLEngine - INFO - Validation: Accuracy=22.0%, Precision=15.1%, Recall=88.9%, F2=44.9%, ROC-AUC=0.49, Trust=HIGH
+2026-05-05 17:00:04,756 - MLEngine - INFO - Initiating ML Training & Prediction for ONGC.NS using 3.0% threshold...
+2026-05-05 17:00:04,919 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:04,921 - MLEngine - INFO - Before SMOTE: 1102 safe days, 42 crash days (3.7% crashes)
+2026-05-05 17:00:04,941 - MLEngine - INFO - After BorderlineSMOTE: 1653 samples (balanced)
+2026-05-05 17:00:04,955 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'RSI_14', 'MACD', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'BB_Width', 'Stochastic', 'OBV', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration']
+2026-05-05 17:00:06,123 - MLEngine - INFO - Ensemble model trained on 1653 samples
+2026-05-05 17:00:06,330 - MLEngine - INFO - Optimal threshold: 0.25 (F2=0.000, optimized for recall)
+2026-05-05 17:00:06,354 - MLEngine - INFO - Validation: Accuracy=15.3%, Precision=3.8%, Recall=100.0%, F2=16.7%, ROC-AUC=0.20, Trust=HIGH
+2026-05-05 17:00:06,372 - MLEngine - INFO - Multi-threshold ensemble: Using 2 models with thresholds [1.2, 2.9] and weights [0.7, 0.3]
+2026-05-05 17:00:06,494 - MLEngine - INFO - Initiating ML Training & Prediction for TECHM.NS using 1.2% threshold...
+2026-05-05 17:00:06,691 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:06,693 - MLEngine - INFO - Before SMOTE: 931 safe days, 213 crash days (18.6% crashes)
+2026-05-05 17:00:06,734 - MLEngine - INFO - After BorderlineSMOTE: 1396 samples (balanced)
+2026-05-05 17:00:06,744 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'MACD', 'Volume_Change', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'BB_Width', 'Stochastic', 'ROC_12', 'Volume_Ratio', 'Price_Acceleration']
+2026-05-05 17:00:08,056 - MLEngine - INFO - Ensemble model trained on 1396 samples
+2026-05-05 17:00:08,138 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.485, optimized for recall)
+2026-05-05 17:00:08,184 - MLEngine - INFO - Validation: Accuracy=45.8%, Precision=28.6%, Recall=58.8%, F2=48.5%, ROC-AUC=0.56, Trust=HIGH
+2026-05-05 17:00:08,322 - MLEngine - INFO - Initiating ML Training & Prediction for TECHM.NS using 2.9% threshold...
+2026-05-05 17:00:08,473 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:08,474 - MLEngine - INFO - Before SMOTE: 1103 safe days, 41 crash days (3.6% crashes)
+2026-05-05 17:00:08,491 - MLEngine - INFO - After BorderlineSMOTE: 1654 samples (balanced)
+2026-05-05 17:00:08,497 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'MACD', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'Stochastic', 'OBV', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration', 'Volatility_Ratio']
+2026-05-05 17:00:09,583 - MLEngine - INFO - Ensemble model trained on 1654 samples
+2026-05-05 17:00:09,756 - MLEngine - INFO - Optimal threshold: 0.50 (F2=0.200, optimized for recall)
+2026-05-05 17:00:09,773 - MLEngine - INFO - Validation: Accuracy=86.4%, Precision=20.0%, Recall=20.0%, F2=20.0%, ROC-AUC=0.68, Trust=LOW
+2026-05-05 17:00:09,791 - AlertWorker - INFO - User 5 scan complete: 1 critical, 0 medium, 2 safe
+2026-05-05 17:00:09,793 - AlertWorker - INFO - Sending alert email to rahulselvam4823@gmail.com (1 high-risk assets)
+2026-05-05 17:00:16,246 - EmailService - INFO - Alert email sent successfully to rahulselvam4823@gmail.com
+2026-05-05 17:00:16,252 - AlertWorker - INFO - ✅ Alert sent successfully to user 5
+2026-05-05 17:00:16,253 - AlertWorker - INFO - Scanning portfolio for user 7 (arunprashanth2102004@gmail.com)
+2026-05-05 17:00:16,268 - MLEngine - INFO - Multi-threshold ensemble: Using 1 models with thresholds [1.1] and weights [1.0]
+2026-05-05 17:00:16,355 - MLEngine - INFO - Initiating ML Training & Prediction for AXISBANK.NS using 1.1% threshold...
+2026-05-05 17:00:16,530 - MLEngine - INFO - Data split: 1145 training days, 59 validation days
+2026-05-05 17:00:16,530 - MLEngine - INFO - Before SMOTE: 950 safe days, 195 crash days (17.0% crashes)
+2026-05-05 17:00:16,555 - MLEngine - INFO - After BorderlineSMOTE: 1425 samples (balanced)
+2026-05-05 17:00:16,572 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'ATR_14', 'Price_to_52w_High', 'PB_Ratio', 'BB_Width', 'Stochastic', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration', 'Volatility_Ratio']
+2026-05-05 17:00:17,826 - MLEngine - INFO - Ensemble model trained on 1425 samples
+2026-05-05 17:00:17,919 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.455, optimized for recall)
+2026-05-05 17:00:17,951 - MLEngine - INFO - Validation: Accuracy=44.1%, Precision=25.7%, Recall=56.2%, F2=45.5%, ROC-AUC=0.49, Trust=HIGH
+2026-05-05 17:00:17,964 - MLEngine - INFO - Multi-threshold ensemble: Using 1 models with thresholds [0.9] and weights [1.0]
+2026-05-05 17:00:18,086 - MLEngine - INFO - Initiating ML Training & Prediction for BAJFINANCE.NS using 0.9% threshold...2026-05-05 17:00:18,254 - MLEngine - INFO - Data split: 1145 training days, 59 validation days
+2026-05-05 17:00:18,256 - MLEngine - INFO - Before SMOTE: 872 safe days, 273 crash days (23.8% crashes)
+2026-05-05 17:00:18,286 - MLEngine - INFO - After BorderlineSMOTE: 1308 samples (balanced)
+2026-05-05 17:00:18,308 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'MACD', 'Volume_Change', 'ATR_14', 'Price_to_52w_High', 'PE_Ratio', 'Stochastic', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Volatility_Ratio']
+2026-05-05 17:00:19,701 - MLEngine - INFO - Ensemble model trained on 1308 samples
+2026-05-05 17:00:19,797 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.450, optimized for recall)
+2026-05-05 17:00:19,823 - MLEngine - INFO - Validation: Accuracy=37.3%, Precision=25.6%, Recall=55.6%, F2=45.0%, ROC-AUC=0.32, Trust=HIGH
+2026-05-05 17:00:19,843 - AlertWorker - INFO - User 7 scan complete: 1 critical, 0 medium, 1 safe
+2026-05-05 17:00:19,843 - AlertWorker - INFO - Sending alert email to arunprashanth2102004@gmail.com (1 high-risk assets)2026-05-05 17:00:26,495 - EmailService - INFO - Alert email sent successfully to arunprashanth2102004@gmail.com
+2026-05-05 17:00:26,499 - AlertWorker - INFO - ✅ Alert sent successfully to user 7
+2026-05-05 17:00:26,499 - AlertWorker - INFO - Scanning portfolio for user 8 (babyrahul.47@gmail.com)
+2026-05-05 17:00:26,518 - MLEngine - INFO - Multi-threshold ensemble: Using 1 models with thresholds [1.0] and weights [1.0]
+2026-05-05 17:00:26,598 - MLEngine - INFO - Initiating ML Training & Prediction for HDFCBANK.NS using 1.0% threshold...
+2026-05-05 17:00:26,791 - MLEngine - INFO - Data split: 1145 training days, 59 validation days
+2026-05-05 17:00:26,792 - MLEngine - INFO - Before SMOTE: 966 safe days, 179 crash days (15.6% crashes)
+2026-05-05 17:00:26,810 - MLEngine - INFO - After BorderlineSMOTE: 1449 samples (balanced)
+2026-05-05 17:00:26,821 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'MACD', 'Volume_Change', 'ATR_14', 'Price_to_52w_High', 'BB_Width', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration', 'Volatility_Ratio']
+2026-05-05 17:00:28,144 - MLEngine - INFO - Ensemble model trained on 1449 samples
+2026-05-05 17:00:28,252 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.532, optimized for recall)
+2026-05-05 17:00:28,287 - MLEngine - INFO - Validation: Accuracy=66.1%, Precision=45.5%, Recall=55.6%, F2=53.2%, ROC-AUC=0.67, Trust=HIGH
+2026-05-05 17:00:28,309 - MLEngine - INFO - Multi-threshold ensemble: Using 2 models with thresholds [1.0, 1.5] and weights [0.6, 0.4]
+2026-05-05 17:00:28,444 - MLEngine - INFO - Initiating ML Training & Prediction for ICICIBANK.NS using 1.0% threshold...
+2026-05-05 17:00:28,581 - MLEngine - INFO - Data split: 1145 training days, 59 validation days
+2026-05-05 17:00:28,583 - MLEngine - INFO - Before SMOTE: 961 safe days, 184 crash days (16.1% crashes)
+2026-05-05 17:00:28,602 - MLEngine - INFO - After BorderlineSMOTE: 1441 samples (balanced)
+2026-05-05 17:00:28,612 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'MACD', 'Volume_Change', 'Price_to_52w_High', 'Beta', 'BB_Width', 'Stochastic', 'OBV', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Volatility_Ratio']
+2026-05-05 17:00:29,963 - MLEngine - INFO - Ensemble model trained on 1441 samples
+2026-05-05 17:00:30,049 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.580, optimized for recall)
+2026-05-05 17:00:30,073 - MLEngine - INFO - Validation: Accuracy=45.8%, Precision=32.5%, Recall=72.2%, F2=58.0%, ROC-AUC=0.53, Trust=HIGH
+2026-05-05 17:00:30,217 - MLEngine - INFO - Initiating ML Training & Prediction for ICICIBANK.NS using 1.5% threshold...
+2026-05-05 17:00:30,325 - MLEngine - INFO - Data split: 1145 training days, 59 validation days
+2026-05-05 17:00:30,326 - MLEngine - INFO - Before SMOTE: 1057 safe days, 88 crash days (7.7% crashes)
+2026-05-05 17:00:30,328 - MLEngine - INFO - After BorderlineSMOTE: 1585 samples (balanced)
+2026-05-05 17:00:30,345 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'MACD', 'Volume_Change', 'ATR_14', 'Price_to_52w_High', 'PE_Ratio', 'Beta', 'BB_Width', 'Stochastic', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration']
+2026-05-05 17:00:31,467 - MLEngine - INFO - Ensemble model trained on 1585 samples
+2026-05-05 17:00:31,579 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.635, optimized for recall)
+2026-05-05 17:00:31,605 - MLEngine - INFO - Validation: Accuracy=76.3%, Precision=42.1%, Recall=72.7%, F2=63.5%, ROC-AUC=0.81, Trust=HIGH
+2026-05-05 17:00:31,628 - MLEngine - INFO - Multi-threshold ensemble: Using 1 models with thresholds [1.0] and weights [1.0]
+2026-05-05 17:00:31,739 - MLEngine - INFO - Initiating ML Training & Prediction for SBIN.NS using 1.0% threshold...
+2026-05-05 17:00:31,919 - MLEngine - INFO - Data split: 1145 training days, 59 validation days
+2026-05-05 17:00:31,919 - MLEngine - INFO - Before SMOTE: 921 safe days, 224 crash days (19.6% crashes)
+2026-05-05 17:00:31,953 - MLEngine - INFO - After BorderlineSMOTE: 1381 samples (balanced)
+2026-05-05 17:00:31,967 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'Volume_Change', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'PB_Ratio', 'BB_Width', 'Stochastic', 'ROC_12', 'Volume_Ratio', 'Volatility_Ratio']
+2026-05-05 17:00:33,140 - MLEngine - INFO - Ensemble model trained on 1381 samples
+2026-05-05 17:00:33,320 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.299, optimized for recall)
+2026-05-05 17:00:33,355 - MLEngine - INFO - Validation: Accuracy=71.2%, Precision=36.4%, Recall=28.6%, F2=29.9%, ROC-AUC=0.57, Trust=HIGH
+2026-05-05 17:00:33,406 - MLEngine - INFO - Multi-threshold ensemble: Using 2 models with thresholds [1.0, 1.3] and weights [0.6, 0.4]
+2026-05-05 17:00:33,510 - MLEngine - INFO - Initiating ML Training & Prediction for TCS.NS using 1.0% threshold...
+2026-05-05 17:00:33,633 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:33,634 - MLEngine - INFO - Before SMOTE: 940 safe days, 204 crash days (17.8% crashes)
+2026-05-05 17:00:33,648 - MLEngine - INFO - After BorderlineSMOTE: 1410 samples (balanced)
+2026-05-05 17:00:33,658 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'RSI_14', 'Volume_Change', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'BB_Width', 'OBV', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration', 'Volatility_Ratio']
+2026-05-05 17:00:35,050 - MLEngine - INFO - Ensemble model trained on 1410 samples
+2026-05-05 17:00:35,227 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.294, optimized for recall)
+2026-05-05 17:00:35,241 - MLEngine - INFO - Validation: Accuracy=54.2%, Precision=23.8%, Recall=31.2%, F2=29.4%, ROC-AUC=0.43, Trust=LOW
+2026-05-05 17:00:35,363 - MLEngine - INFO - Initiating ML Training & Prediction for TCS.NS using 1.3% threshold...
+2026-05-05 17:00:35,489 - MLEngine - INFO - Data split: 1144 training days, 59 validation days
+2026-05-05 17:00:35,491 - MLEngine - INFO - Before SMOTE: 1006 safe days, 138 crash days (12.1% crashes)
+2026-05-05 17:00:35,505 - MLEngine - INFO - After BorderlineSMOTE: 1509 samples (balanced)
+2026-05-05 17:00:35,505 - MLEngine - INFO - Selected 15 best features: ['SMA_10', 'SMA_30', 'Rolling_Vol_10', 'Momentum_5', 'MACD', 'ATR_14', 'Gap_Pct', 'Price_to_52w_High', 'BB_Width', 'OBV', 'ROC_12', 'ADX_14', 'Volume_Ratio', 'Price_Acceleration', 'Volatility_Ratio']
+2026-05-05 17:00:36,667 - MLEngine - INFO - Ensemble model trained on 1509 samples
+2026-05-05 17:00:36,845 - MLEngine - INFO - Optimal threshold: 0.15 (F2=0.303, optimized for recall)
+2026-05-05 17:00:36,887 - MLEngine - INFO - Validation: Accuracy=72.9%, Precision=40.0%, Recall=28.6%, F2=30.3%, ROC-AUC=0.52, Trust=HIGH
+2026-05-05 17:00:36,910 - AlertWorker - INFO - User 8 scan complete: 0 critical, 0 medium, 4 safe
+2026-05-05 17:00:36,911 - AlertWorker - INFO - No high-risk assets for user 8. Skipping email.
+2026-05-05 17:00:36,913 - AlertWorker - INFO - ============================================================
+2026-05-05 17:00:36,914 - AlertWorker - INFO - Daily risk scan complete: 2 emails sent, 0 errors
+2026-05-05 17:00:36,940 - AlertWorker - INFO - ============================================================
+2026-05-05 17:00:36,961 - apscheduler.executors.default - INFO - Job "Daily Portfolio Risk Scanner (trigger: cron[day_of_week='mon-fri', hour='17', minute='0'], next run at: 2026-05-06 17:00:00 IST)" executed successfully
