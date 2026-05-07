@@ -15,8 +15,6 @@ def create_chat_widget():
         dbc.Button(
             html.I(className="bi bi-chat-dots-fill", style={"fontSize": "1.5rem"}),
             id="open-chat-btn",
-            color="primary",
-            className="rounded-circle shadow-lg",
             style={
                 "position": "fixed",
                 "bottom": "30px",
@@ -24,59 +22,78 @@ def create_chat_widget():
                 "width": "60px",
                 "height": "60px",
                 "zIndex": "1000",
-                "border": "none"
-            }
+                "border": "none",
+                "backgroundColor": "#388087",
+                "borderRadius": "50%"
+            },
+            className="shadow-lg"
         ),
         
         # Chat Modal
         dbc.Modal([
-            dbc.ModalHeader(
+            dbc.ModalHeader([
                 dbc.ModalTitle([
-                    html.I(className="bi bi-robot me-2"),
-                    "Portfolio Assistant"
-                ]),
-                close_button=True
-            ),
+                    html.I(className="bi bi-robot me-2", style={"color": "#388087"}),
+                    "Portfolio Assistant",
+                    html.Small(" - AI-Powered Risk Analysis", 
+                             style={"color": "#000000", "fontSize": "0.8rem", "marginLeft": "8px"})
+                ], style={"color": "#2c3e50"})
+            ], style={"borderBottom": "2px solid #C2EDCE", "backgroundColor": "#fafafa"}),
             dbc.ModalBody([
                 # Chat History Container
                 html.Div(
                     id="chat-history",
                     style={
-                        "height": "400px",
+                        "height": "450px",
                         "overflowY": "auto",
-                        "padding": "15px",
-                        "backgroundColor": "#f8f9fa",
-                        "borderRadius": "8px",
-                        "marginBottom": "15px"
+                        "padding": "20px",
+                        "backgroundColor": "#fafafa",
+                        "borderRadius": "12px",
+                        "marginBottom": "15px",
+                        "border": "1px solid #e9ecef"
                     },
                     children=[
-                        create_bot_message("Hello! I'm your portfolio assistant. I can help you understand your portfolio, explain risk metrics, and suggest improvements. How can I assist you today?")
+                        create_bot_message("Hello! I'm your portfolio assistant. I can help you with:\n\n• Understanding your portfolio composition\n• Explaining risk metrics and analysis\n• Suggesting portfolio improvements\n• Answering questions about your investments\n\nWhat would you like to know about your portfolio?")
                     ]
                 ),
                 
                 # Loading Indicator
-                dbc.Spinner(
-                    html.Div(id="chat-loading"),
-                    size="sm",
-                    color="primary",
-                    type="border"
-                ),
+                html.Div([
+                    dbc.Spinner(
+                        html.Div(id="chat-loading"),
+                        size="sm",
+                        color="primary",
+                        type="border"
+                    ),
+                    html.Div(id="typing-indicator", style={"display": "none"})
+                ], style={"textAlign": "center", "marginBottom": "10px"}),
                 
                 # Input Area
-                dbc.InputGroup([
-                    dbc.Input(
-                        id="chat-input",
-                        placeholder="Ask about your portfolio...",
-                        type="text",
-                        style={"borderRadius": "20px 0 0 20px"}
-                    ),
-                    dbc.Button(
-                        html.I(className="bi bi-send-fill"),
-                        id="send-chat-btn",
-                        color="primary",
-                        style={"borderRadius": "0 20px 20px 0"}
-                    )
-                ], className="mb-0")
+                html.Div([
+                    dbc.InputGroup([
+                        dbc.Input(
+                            id="chat-input",
+                            placeholder="Ask about your portfolio, risk metrics, or investment strategy...",
+                            type="text",
+                            style={
+                                "borderRadius": "25px 0 0 25px",
+                                "border": "2px solid #C2EDCE",
+                                "fontSize": "0.95rem"
+                            }
+                        ),
+                        dbc.Button(
+                            html.I(className="bi bi-send-fill"),
+                            id="send-chat-btn",
+                            style={
+                                "borderRadius": "0 25px 25px 0",
+                                "border": "2px solid #388087",
+                                "backgroundColor": "#388087",
+                                "paddingLeft": "15px",
+                                "paddingRight": "15px"
+                            }
+                        )
+                    ], className="mb-0")
+                ], style={"marginTop": "10px"})
             ]),
         ],
         id="chat-modal",
@@ -92,42 +109,201 @@ def create_chat_widget():
 
 
 def create_user_message(text):
-    """Creates a user message bubble."""
+    """Creates an enhanced user message bubble."""
     return html.Div([
-        html.Div(
-            text,
-            style={
-                "backgroundColor": "#007bff",
-                "color": "white",
-                "padding": "10px 15px",
-                "borderRadius": "18px 18px 0 18px",
-                "maxWidth": "70%",
-                "marginLeft": "auto",
-                "marginBottom": "10px",
-                "wordWrap": "break-word"
-            }
-        )
+        html.Div([
+            html.Div([
+                html.I(className="bi bi-person-fill me-2", style={"fontSize": "1rem"}),
+                "You"
+            ], style={"fontSize": "0.85rem", "marginBottom": "4px", "color": "rgba(255,255,255,0.8)"}),
+            html.Div(text, style={"lineHeight": "1.4"})
+        ],
+        style={
+            "backgroundColor": "#388087",
+            "color": "white",
+            "padding": "12px 16px",
+            "borderRadius": "12px 12px 4px 12px",
+            "maxWidth": "75%",
+            "marginLeft": "auto",
+            "marginBottom": "15px",
+            "wordWrap": "break-word",
+            "boxShadow": "0 2px 4px rgba(56,128,135,0.3)"
+        },
+        className="user-message")
     ], style={"textAlign": "right"})
 
 
-def create_bot_message(text):
-    """Creates a bot message bubble."""
+def create_typing_indicator():
+    """Creates a typing indicator for when AI is processing."""
     return html.Div([
         html.Div([
-            html.I(className="bi bi-robot me-2", style={"fontSize": "1.2rem"}),
-            html.Span(text)
+            html.I(className="bi bi-robot me-2", style={"fontSize": "1.2rem", "color": "#388087"}),
+            html.Strong("Portfolio Assistant", style={"color": "#388087"})
+        ], style={"marginBottom": "8px"}),
+        html.Div([
+            html.Span("AI is analyzing", style={"marginRight": "8px"}),
+            html.Span(".", className="typing-dot", style={"animation": "blink 1.4s infinite"}),
+            html.Span(".", className="typing-dot", style={"animation": "blink 1.4s infinite 0.2s"}),
+            html.Span(".", className="typing-dot", style={"animation": "blink 1.4s infinite 0.4s"})
+        ], style={"color": "#6c757d", "fontStyle": "italic"})
+    ], style={
+        "backgroundColor": "#f8f9fa",
+        "border": "1px solid #e9ecef",
+        "borderLeft": "4px solid #388087",
+        "padding": "15px",
+        "borderRadius": "8px",
+        "maxWidth": "85%",
+        "marginRight": "auto",
+        "marginBottom": "15px",
+        "textAlign": "left"
+    })
+
+
+def create_bot_message(text):
+    """Creates an enhanced bot message with structured formatting."""
+    # Parse and format the response
+    formatted_content = _format_ai_response(text)
+    
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.I(className="bi bi-robot me-2", style={"fontSize": "1.2rem", "color": "#388087"}),
+                html.Strong("Portfolio Assistant", style={"color": "#388087"})
+            ], style={"marginBottom": "8px"}),
+            formatted_content
         ],
         style={
-            "backgroundColor": "#e9ecef",
+            "backgroundColor": "#ffffff",
+            "border": "1px solid #C2EDCE",
+            "borderLeft": "4px solid #388087",
             "color": "#212529",
-            "padding": "10px 15px",
-            "borderRadius": "18px 18px 18px 0",
-            "maxWidth": "70%",
+            "padding": "15px",
+            "borderRadius": "8px",
+            "maxWidth": "85%",
             "marginRight": "auto",
-            "marginBottom": "10px",
-            "wordWrap": "break-word"
-        })
+            "marginBottom": "15px",
+            "boxShadow": "0 2px 4px rgba(56,128,135,0.1)"
+        },
+        className="bot-message")
     ], style={"textAlign": "left"})
+
+
+def _format_ai_response(text):
+    """Format AI response with better structure and readability."""
+    if not text:
+        return html.Div("No response available.")
+    
+    # Split text into sections based on common patterns
+    sections = []
+    lines = text.split('\n')
+    current_section = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            if current_section:
+                sections.append(current_section)
+                current_section = []
+            continue
+        
+        # Check if line is a header (contains keywords like "PORTFOLIO", "ANALYSIS", etc.)
+        if any(keyword in line.upper() for keyword in ['PORTFOLIO', 'ANALYSIS', 'RECOMMENDATION', 'SUMMARY', 'DETAILS']):
+            if current_section:
+                sections.append(current_section)
+                current_section = []
+            current_section.append(('header', line))
+        # Check if line starts with bullet point or dash
+        elif line.startswith(('-', '•', '*')) or line.startswith(tuple('123456789')):
+            current_section.append(('bullet', line))
+        # Check if line contains currency or percentage (likely metrics)
+        elif '₹' in line or '%' in line or any(word in line.lower() for word in ['ratio', 'beta', 'price', 'risk']):
+            current_section.append(('metric', line))
+        else:
+            current_section.append(('text', line))
+    
+    if current_section:
+        sections.append(current_section)
+    
+    # If no clear structure found, treat as simple text with better formatting
+    if len(sections) == 1 and all(item[0] == 'text' for item in sections[0]):
+        return _format_simple_text(text)
+    
+    # Create formatted sections
+    formatted_sections = []
+    for section in sections:
+        section_content = []
+        
+        for item_type, content in section:
+            if item_type == 'header':
+                section_content.append(
+                    html.H6(content, style={
+                        "color": "#388087", 
+                        "marginBottom": "8px", 
+                        "fontWeight": "600",
+                        "borderBottom": "1px solid #C2EDCE",
+                        "paddingBottom": "4px"
+                    })
+                )
+            elif item_type == 'bullet':
+                section_content.append(
+                    html.Li(content.lstrip('-•* '), style={
+                        "marginBottom": "4px",
+                        "listStyleType": "disc",
+                        "marginLeft": "20px"
+                    })
+                )
+            elif item_type == 'metric':
+                section_content.append(
+                    html.Div(content, style={
+                        "backgroundColor": "#f8f9fa",
+                        "padding": "6px 10px",
+                        "borderRadius": "4px",
+                        "marginBottom": "6px",
+                        "fontFamily": "monospace",
+                        "fontSize": "0.9rem",
+                        "border": "1px solid #e9ecef"
+                    })
+                )
+            else:
+                section_content.append(
+                    html.P(content, style={
+                        "marginBottom": "8px",
+                        "lineHeight": "1.5"
+                    })
+                )
+        
+        if section_content:
+            formatted_sections.append(
+                html.Div(section_content, style={"marginBottom": "12px"})
+            )
+    
+    return html.Div(formatted_sections)
+
+
+def _format_simple_text(text):
+    """Format simple text with better readability."""
+    # Split into paragraphs and format
+    paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+    
+    if len(paragraphs) <= 1:
+        # Single paragraph - check for sentences
+        sentences = [s.strip() + '.' for s in text.split('.') if s.strip()]
+        if len(sentences) > 1:
+            return html.Div([
+                html.P(sentence, style={
+                    "marginBottom": "6px",
+                    "lineHeight": "1.5"
+                }) for sentence in sentences
+            ])
+        else:
+            return html.P(text, style={"lineHeight": "1.5", "marginBottom": "0"})
+    
+    return html.Div([
+        html.P(para, style={
+            "marginBottom": "10px",
+            "lineHeight": "1.5"
+        }) for para in paragraphs
+    ])
 
 
 # Callbacks
@@ -158,7 +334,7 @@ def toggle_chat_modal(n_clicks, is_open):
     prevent_initial_call=True
 )
 def handle_chat_message(n_clicks, n_submit, message, current_history, conversation_history, session):
-    """Handle sending and receiving chat messages."""
+    """Handle sending and receiving chat messages with enhanced UI."""
     if not message or not message.strip():
         return current_history, "", conversation_history, ""
     
@@ -169,10 +345,11 @@ def handle_chat_message(n_clicks, n_submit, message, current_history, conversati
     
     # Add user message to display
     user_bubble = create_user_message(message)
-    current_history.append(user_bubble)
+    updated_history = current_history + [user_bubble]
     
-    # Show loading
-    loading_indicator = "..."
+    # Add typing indicator
+    typing_indicator = create_typing_indicator()
+    updated_history_with_typing = updated_history + [typing_indicator]
     
     try:
         # Call backend API
@@ -193,18 +370,18 @@ def handle_chat_message(n_clicks, n_submit, message, current_history, conversati
             conversation_history.append({"role": "user", "parts": [message]})
             conversation_history.append({"role": "model", "parts": [bot_response]})
             
-            # Add bot message to display
+            # Add bot message to display (remove typing indicator)
             bot_bubble = create_bot_message(bot_response)
-            current_history.append(bot_bubble)
+            final_history = updated_history + [bot_bubble]
         else:
-            error_bubble = create_bot_message("Sorry, I encountered an error. Please try again.")
-            current_history.append(error_bubble)
+            error_bubble = create_bot_message("Sorry, I encountered an error. Please try again later.")
+            final_history = updated_history + [error_bubble]
     
     except requests.exceptions.Timeout:
-        error_bubble = create_bot_message("Request timed out. Please try again.")
-        current_history.append(error_bubble)
+        error_bubble = create_bot_message("Request timed out. Please try a shorter question or try again.")
+        final_history = updated_history + [error_bubble]
     except Exception as e:
-        error_bubble = create_bot_message("An error occurred. Please try again later.")
-        current_history.append(error_bubble)
+        error_bubble = create_bot_message("An error occurred. Please check your connection and try again.")
+        final_history = updated_history + [error_bubble]
     
-    return current_history, "", conversation_history, ""
+    return final_history, "", conversation_history, ""

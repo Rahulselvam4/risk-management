@@ -38,7 +38,7 @@ layout = dbc.Container([
                     # Redirects
                     html.Div([
                         html.Span("No account? "),
-                        html.A("Request Access", href="/register", style={"color": "#388087", "textDecoration": "none"})
+                        html.A("Sign Up", href="/register", style={"color": "#388087", "textDecoration": "none"})
                     ], className="text-center mt-2"),
                     
                     # Hidden components for logic
